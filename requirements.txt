@@ -1,0 +1,7 @@
+telebot
+sqlalchemy
+apscheduler
+geopy
+pandas
+python-dotenv
+utils
