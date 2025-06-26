@@ -2,6 +2,8 @@ from telebot import types
 from all_txt import lang
 from service import *
 from telebot.types import InlineKeyboardMarkup, InlineKeyboardButton, ReplyKeyboardMarkup, KeyboardButton
+from deep_translator import GoogleTranslator
+
 
 
 def get_language():
@@ -35,29 +37,21 @@ def get_radius(language):
     kb.add(radius, radius1, radius2, all_vacancy)
     return kb
 
-def get_role(language):
-    markup = ReplyKeyboardMarkup(resize_keyboard=True, one_time_keyboard=True)
-    if language == "ru":
-        markup.add(KeyboardButton("Искатель"),
-                KeyboardButton("Работодатель"))
-    else:
-        markup.add(KeyboardButton("Ish izlovchi", ),
-                   KeyboardButton("Ish beruvchi",))
-    return markup
 
 def main_menu(tg_id,language):
     markup = InlineKeyboardMarkup(row_width=2)
     user = get_user(tg_id)
-    if user.role == 'искатель':
+    if user.role == '👨‍🔧 соискатель' or user.role == '👨‍🔧 arizachi':
         find_job = InlineKeyboardButton(lang['main_menu']['find_job'][language], callback_data='find_job')
+        category = InlineKeyboardButton(lang['main_menu']['category'][language], callback_data='category')
         favorite = InlineKeyboardButton(lang['main_menu']['favorite'][language], callback_data='favorite')
         settings = InlineKeyboardButton(lang['main_menu']['settings'][language], callback_data='settings')
-        markup.add(find_job,favorite, settings)
-    elif user.role == 'работодатель':
+        markup.add(find_job,category, favorite, settings)
+    elif user.role == '🏢 работодатель' or user.role == '🏢 ish beruvchi':
         find_job = InlineKeyboardButton(lang['main_menu']['create_job'][language], callback_data='create_job')
-        favorite = InlineKeyboardButton(lang['main_menu']['favorite'][language], callback_data='favorite')
+        my_vacancy = InlineKeyboardButton(lang['main_menu']['my_jobs'][language], callback_data='my_vacancy')
         settings = InlineKeyboardButton(lang['main_menu']['settings'][language], callback_data='settings')
-        markup.add(find_job,favorite, settings)
+        markup.add(find_job,my_vacancy, settings)
     return markup
 
 def admin_menu():
@@ -71,6 +65,14 @@ def admin_menu():
 def cancel():
     markup = types.ReplyKeyboardMarkup(resize_keyboard=True)
     markup.add('❌ Отменить')
+    return markup
+
+def agree(language):
+    markup = types.ReplyKeyboardMarkup(resize_keyboard=True)
+    if language == 'uz':
+        markup.add('❌ Отменить','✅ Qabul qilish')
+    else:
+        markup.add('❌ Отменить','✅ Подтвердить')
     return markup
 
 def get_currency_keyboard():
@@ -88,4 +90,30 @@ def get_categories_keyboard(language):
     categories = get_all_categories()
     for category in categories:
         markup.row(InlineKeyboardButton(category.name, callback_data=f"category_{category.name}"))
+    return markup
+
+def category_keyboard(language):
+    markup = ReplyKeyboardMarkup(resize_keyboard=True)
+    categories = get_all_categories()
+
+    lang_code = {
+        'ru': 'ru',
+        'uz': 'uz',
+        'en': 'en'
+    }.get(language, 'ru')
+    for category in categories:
+        try:
+            translated = GoogleTranslator(source='auto', target=lang_code).translate(category.name)
+        except Exception as e:
+            print(f"[ERROR translate_category] {e}")
+            translated = category.name
+        markup.add(KeyboardButton(translated))
+
+    return markup
+
+def create_or_delete(language):
+    markup = InlineKeyboardMarkup()
+    markup.add(InlineKeyboardButton(lang['create_or_delete'][language][1], callback_data='delete'),
+               InlineKeyboardButton(lang['create_or_delete'][language][0], callback_data='create'))
+    markup.row(InlineKeyboardButton(lang['create_or_delete'][language][2], callback_data='main_menu'))
     return markup

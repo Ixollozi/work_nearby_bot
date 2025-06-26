@@ -5,3 +5,4 @@ geopy
 pandas
 python-dotenv
 utils
+deep_translator

@@ -10,6 +10,11 @@ ADMINS = [385688612]
 CATEGORIES = ['Разработка и IT', 'Дизайн', 'Маркетинг', 'Продажи', 'Сопровождение', 'Другое']
 chat_pages = {}
 user_create_job_data = {}
+existing_category_names = [c.name for c in get_all_categories()]
+
+for i in CATEGORIES:
+    if i not in existing_category_names:
+        create_category(i)
 
 
 ############################## registration ##############################
@@ -48,7 +53,7 @@ def get_user_name(message, language):
             bot.register_next_step_handler(message, get_user_name, language)
         else:
             name = message.text
-            bot.send_message(user_id, lang['role'][language], reply_markup=get_role(language))
+            bot.send_message(user_id, lang['role'][language], reply_markup=get_role_keyboard(language))
             bot.register_next_step_handler(message, get_user_role, name, language)
     except Exception as e:
         print(f"[ERROR get_user_name] {e}")
@@ -60,9 +65,10 @@ def get_user_role(message, name, language):
     user_id = message.from_user.id
     try:
         role = message.text.lower()
-        valid_roles = ['искатель', 'работодатель', 'ish izlovchi', 'ish beruvchi']
+        print(role)
+        valid_roles = ['👨‍🔧 arizachi', '🏢 ish beruvchi', '👨‍🔧 соискатель', '🏢 работодатель']
         if role not in valid_roles:
-            bot.send_message(user_id, lang['role_error'][language], reply_markup=get_role(language))
+            bot.send_message(user_id, lang['role_error'][language], reply_markup=get_role_keyboard(language))
             bot.register_next_step_handler(message, get_user_role, name, language)
         else:
             bot.send_message(user_id, lang['phone'][language], reply_markup=get_phone(language))
@@ -72,15 +78,23 @@ def get_user_role(message, name, language):
         bot.send_message(user_id, "Ошибка при выборе роли.")
         bot.register_next_step_handler(message, get_user_role, name, language)
 
-
 def get_user_phone(message, name, role, language):
     user_id = message.from_user.id
     try:
         print(message.contact)
         if message.contact:
             phone = message.contact.phone_number
-            bot.send_message(user_id, lang['location'][language], reply_markup=ReplyKeyboardRemove())
-            bot.register_next_step_handler(message, get_user_location, name, phone, language, role)
+
+            if role == '🏢 работодатель' or role == '🏢 ish beruvchi':
+                bot.send_message(user_id, lang['location_for_job'][language], reply_markup=ReplyKeyboardRemove())
+            else:
+                bot.send_message(user_id, lang['location'][language], reply_markup=ReplyKeyboardRemove())
+
+            bot.register_next_step_handler(
+                message,
+                get_user_location,
+                name, role, phone, language
+            )
         else:
             bot.send_message(user_id, lang['phone_error'][language], reply_markup=get_phone(language))
             bot.register_next_step_handler(message, get_user_phone, name, role, language)
@@ -89,23 +103,33 @@ def get_user_phone(message, name, role, language):
         bot.send_message(user_id, "Ошибка при получении номера телефона.")
         bot.register_next_step_handler(message, get_user_phone, name, role, language)
 
-
-def get_user_location(message, name, phone, language, role):
+def get_user_location(message, name, role, phone, language):
     user_id = message.from_user.id
     try:
         if message.location:
             latitude = message.location.latitude
             longitude = message.location.longitude
             bot.send_message(user_id, lang['radius'][language], reply_markup=get_radius(language))
-            bot.register_next_step_handler(message, get_user_radius, name, role, phone, latitude, longitude, language)
+            bot.register_next_step_handler(
+                message,
+                get_user_radius,
+                name, role, phone, latitude, longitude, language
+            )
         else:
-            bot.send_message(user_id, "Пожалуйста, отправьте геолокацию.")
-            bot.register_next_step_handler(message, get_user_location, name, phone, language, role)
+            bot.send_message(user_id, lang['location_error'][language])
+            bot.register_next_step_handler(
+                message,
+                get_user_location,
+                name, role, phone, language
+            )
     except Exception as e:
         print(f"[ERROR get_user_location] {e}")
-        bot.send_message(user_id, "Ошибка при получении локации.")
-        bot.register_next_step_handler(message, get_user_location, name, phone, language, role)
-
+        bot.send_message(user_id, lang['location_error'][language])
+        bot.register_next_step_handler(
+            message,
+            get_user_location,
+            name, role, phone, language
+        )
 
 def get_user_radius(message, name, role, phone, latitude, longitude, language):
     user_id = message.from_user.id
@@ -336,17 +360,36 @@ def remove_category(message):
 
 ####################################### main menu #######################################
 
-@bot.callback_query_handler(func=lambda call: call.data in ['find_job', 'create_job', 'favorite', 'settings'])
+@bot.callback_query_handler(func=lambda call: call.data in ['find_job', 'create_job', 'favorite', 'settings', 'my_vacancy','category', 'create','delete', 'main_menu'])
 def handle_main_menu(call):
     user_id = call.from_user.id
-
     try:
         user = get_user(user_id)
         language = user.language if user else 'ru'
 
+        categories = get_user_categories(user_id)
+        category_names = [c.name for c in categories]
+
+        msg = {
+            'ru': f'Ваш выбор поиска по категориям: \n' + '\n'.join(category_names) if category_names else 'Вы не выбрали ни одной категории.',
+            'en': f'Your selected job categories: \n' + '\n'.join(category_names) if category_names else 'You have not selected any categories.',
+            'uz': f'Siz tanlagan ish kategoriyalari: \n' + '\n'.join(category_names) if category_names else 'Siz hali hech qanday kategoriya tanlamagansiz.'
+        }
+
+        del_category = {
+            'ru': 'Выберите категорию для удаления',
+            'en': 'Select a category to delete',
+            'uz': 'Kategoriyani o‘chirish uchun tanlang'
+        }
+
         if call.data == 'find_job':
             bot.answer_callback_query(call.id, "Поиск работы...")
-            # Здесь добавьте логику поиска работы
+
+            if not categories:
+                msg_send = bot.send_message(user_id, lang['choose_category'][language], reply_markup=category_keyboard(language))
+                bot.register_next_step_handler(msg_send, choose_category, language, 'add')
+            # else:
+                # find_vacancies(user_id, categories, language)
 
         elif call.data == 'create_job':
             bot.answer_callback_query(call.id, "Создание вакансии...")
@@ -355,15 +398,35 @@ def handle_main_menu(call):
 
         elif call.data == 'favorite':
             bot.answer_callback_query(call.id, "Избранные...")
-            # Здесь добавьте логику избранного
 
         elif call.data == 'settings':
             bot.answer_callback_query(call.id, "Настройки...")
-            # Здесь добавьте логику настроек
+
+        elif call.data == 'my_vacancy':
+            bot.answer_callback_query(call.id, "Мои вакансии...")
+
+        elif call.data == 'category':
+            bot.answer_callback_query(call.id, "Выберите категорию...")
+            bot.send_message(user_id, msg[language], reply_markup=create_or_delete(language))
+
+        elif call.data == 'create':
+            bot.answer_callback_query(call.id, "Добавление категории...")
+            bot.send_message(user_id, lang['choose_category'][language],reply_markup=category_keyboard(language))
+            bot.register_next_step_handler_by_chat_id(user_id, lambda msg: choose_category(msg, language, 'add'))
+
+        elif call.data == 'delete':
+            bot.answer_callback_query(call.id, "Удаление категории...")
+            bot.send_message(user_id, del_category[language], reply_markup=category_keyboard(language))
+            bot.register_next_step_handler_by_chat_id(user_id, lambda msg: choose_category(msg, language, 'delete'))
+
+        elif call.data == 'main_menu':
+            bot.answer_callback_query(call.id, "Главное меню...")
+            bot.send_message(user_id, 'MENU', reply_markup=main_menu(user_id, language))
 
     except Exception as e:
         print(f"[ERROR handle_main_menu] {e}")
         bot.answer_callback_query(call.id, "Произошла ошибка")
+
 
 
 ###################################### create job #######################################
@@ -431,8 +494,8 @@ def handle_currency_selection(call):
 
         data['currency'] = currency
 
-        msg = bot.send_message(user_id, lang['create_job_category'][language])
-        bot.register_next_step_handler(msg, create_job_category,
+        msg = bot.send_message(user_id, lang['create_job_price'][language])
+        bot.register_next_step_handler(msg, create_job_price,
                                        data['language'], data['name'], data['description'], data['currency'])
 
     except Exception as e:
@@ -440,29 +503,7 @@ def handle_currency_selection(call):
         bot.answer_callback_query(call.id, "Произошла ошибка")
 
 
-
-def create_job_category(message, language, name, description, currency):
-    try:
-        category = message.text.strip()
-        print(f"category: {category}")
-
-        existing_categories = [c.name.lower() for c in get_all_categories()]
-        predefined_categories = [c.lower() for c in CATEGORIES]
-
-        if category.lower() not in predefined_categories and category.lower() not in existing_categories:
-            bot.send_message(message.chat.id, lang['create_job_category_error'][language])
-            bot.register_next_step_handler(message, create_job_category, language, name, description, currency)
-        else:
-            bot.send_message(message.chat.id, lang['create_job_price'][language])
-            bot.register_next_step_handler(message, create_job_price, language, name, description, currency, category)
-    except Exception as e:
-        print(f"[ERROR create_job_category] {e}")
-        bot.send_message(message.chat.id, lang['create_job_category_error'][language])
-        bot.register_next_step_handler(message, create_job_category, language, name, description, currency)
-
-
-
-def create_job_price(message, language, name, description, currency, category):
+def create_job_price(message, language, name, description, currency):
     user = get_user(message.from_user.id)
     contacts = user.phone if user.username is None else f"{user.phone}, username: {user.username}"
 
@@ -470,11 +511,79 @@ def create_job_price(message, language, name, description, currency, category):
         price_text = message.text
         if not price_text.isdigit():
             bot.send_message(message.chat.id, lang['create_job_price_error'][language])
-            bot.register_next_step_handler(message, create_job_price, language, name, description, currency, category)
+            bot.register_next_step_handler(message, create_job_price, language, name, description, currency)
         else:
             price = int(price_text)
             payment = f"{price} {currency}"
 
+            # Сохраняем текущие данные
+            user_create_job_data[message.from_user.id] = {
+                'language': language,
+                'name': name,
+                'description': description,
+                'currency': currency,
+                'price': payment,
+                'contacts': contacts
+            }
+
+            bot.send_message(message.chat.id, lang['create_job_category'][language], reply_markup=category_keyboard(language))
+            bot.register_next_step_handler(message, create_job_category, language, name, description, currency, payment, contacts)
+
+    except Exception as e:
+        print(f"[ERROR create_job_price] {e}")
+        bot.register_next_step_handler(message, create_job_price, language, name, description, currency)
+
+
+def create_job_category(message, language, name, description, currency, payment, contacts):
+    try:
+        category = message.text.strip()
+        existing_categories = [c.name.lower() for c in get_all_categories()]
+        predefined_categories = [c.lower() for c in CATEGORIES]
+
+        if category.lower() not in predefined_categories and category.lower() not in existing_categories:
+            bot.send_message(message.chat.id, lang['create_job_category_error'][language])
+            bot.register_next_step_handler(message, create_job_category, language, name, description, currency, payment, contacts)
+        else:
+            user_create_job_data[message.from_user.id]['category'] = category
+
+            data = user_create_job_data.get(message.from_user.id)
+
+            text = {
+                'ru': f"Вы уверены, что хотите создать вакансию:\n"
+                      f"📌 Название: {data['name']}\n"
+                      f"📝 Описание:\n {data['description']}\n"
+                      f"💰 Заработная плата: {data['price']}\n"
+                      f"📂 Категория: {data['category']}\n"
+                      f"📞 Контакты: {data['contacts']}",
+                'uz': f"Ish vakansiyasini yaratmoqchimisiz:\n"
+                      f"📌 Nomi: {data['name']}\n"
+                      f"📝 Tavsif:\n {data['description']}\n"
+                      f"💰 To‘lov: {data['price']}\n"
+                      f"📂 Kategoriya: {data['category']}\n"
+                      f"📞 Kontaktlar: {data['contacts']}",
+                'en': f"Are you sure you want to create this job posting:\n"
+                      f"📌 Title: {data['name']}\n"
+                      f"📝 Description:\n {data['description']}\n"
+                      f"💰 Salary: {data['price']}\n"
+                      f"📂 Category: {data['category']}\n"
+                      f"📞 Contacts: {data['contacts']}"
+            }
+
+            bot.send_message(message.chat.id, text[language], reply_markup=agree(language))
+            bot.register_next_step_handler(message, agree_job, language, name, description, currency, category, payment, contacts)
+
+    except Exception as e:
+        print(f"[ERROR create_job_category] {e}")
+        bot.send_message(message.chat.id, lang['create_job_category_error'][language])
+        bot.register_next_step_handler(message, create_job_category, language, name, description, currency, payment, contacts)
+
+
+def agree_job(message, language, name, description, currency, category, payment, contacts):
+    user = get_user(message.from_user.id)
+    try:
+        if message.text == '❌ Отменить':
+            bot.send_message(message.chat.id, 'MENU', reply_markup=main_menu(message.from_user.id, language))
+        else:
             create_vacancy(
                 user_id=message.from_user.id,
                 title=name,
@@ -487,11 +596,72 @@ def create_job_price(message, language, name, description, currency, category):
                 expires_at=datetime.now(timezone.utc) + timedelta(days=7)
             )
 
-            bot.send_message(message.chat.id, "✅ Вакансия успешно создана!")
+            bot.send_message(message.chat.id, lang['create_job_agree'][language], reply_markup=ReplyKeyboardRemove())
+            bot.send_message(message.chat.id, 'MENU', reply_markup=main_menu(message.from_user.id, language))
+    except Exception as e:
+        print(f"[ERROR agree_job] {e}")
+        bot.send_message(message.chat.id, lang['create_job_agree_error'][language])
+        bot.register_next_step_handler(message, agree_job, language, name, description, currency, category, payment, contacts)
+
+
+####################################### find job ########################################
+
+def find_job(message, language):
+    print('asdasdas')
+    try:
+        print('asdasdas')
+        if get_user_categories(message.from_user.id) is not None:
+            print('asdads')
+
+        else:
+            bot.send_message(message.chat.id, lang['choose_category'][language], reply_markup=category_keyboard(language))
+            bot.register_next_step_handler(message, choose_category, language)
+    except Exception as e:
+        print(f"[ERROR find_job] {e}")
+        bot.send_message(message.chat.id, lang['find_job_error'][language])
+
+
+def choose_category(message, language, mode):
+    category_name = message.text
+    user_categories = get_user_categories(message.from_user.id)
+    user_category_names = [c.name for c in user_categories] if user_categories else []
+
+    try:
+        all_categories = get_all_categories()
+        category_obj = next((c for c in all_categories if c.name == category_name), None)
+        category_id = get_category_id(category_name)
+
+        if not category_obj:
+            bot.send_message(message.chat.id, lang['category_error'][language], reply_markup=category_keyboard(language))
+            bot.register_next_step_handler(message, lambda msg: choose_category(msg, language, mode))
+            return
+
+        if mode == 'add':
+            if category_name in user_category_names:
+                bot.send_message(message.chat.id, lang['category_exists'][language], reply_markup=category_keyboard(language))
+                bot.register_next_step_handler(message, lambda msg: choose_category(msg, language, mode))
+            elif message.text == '❌ Отменить':
+                bot.send_message(message.chat.id, 'MENU', reply_markup=main_menu(message.from_user.id, language))
+            else:
+                add_user_category(user_id=message.from_user.id, category_id=category_id)
+                bot.send_message(message.chat.id, lang['category_selected'][language], reply_markup=main_menu(message.from_user.id, language))
+
+        elif mode == 'delete':
+            print(user_category_names)
+            if category_name not in user_category_names:
+                bot.send_message(message.chat.id, lang['category_not_exists'][language],
+                                 reply_markup=category_keyboard(language))
+                bot.register_next_step_handler(message, lambda msg: choose_category(msg, language, mode))
+            elif message.text == '❌ Отменить':
+                bot.send_message(message.chat.id, 'MENU', reply_markup=main_menu(message.from_user.id, language))
+            else:
+                delete_user_category(user_id=message.from_user.id, category_id=category_id)
+                bot.send_message(message.chat.id, lang['category_deleted'][language],
+                                 reply_markup=main_menu(message.from_user.id, language))
 
     except Exception as e:
-        print(f"[ERROR create_job_price] {e}")
-        bot.register_next_step_handler(message, create_job_price, language, name, description, currency, category)
+        print(f"[ERROR choose_category] {e}")
+        bot.send_message(message.chat.id, lang['category_error'][language])
 
 
 bot.infinity_polling()

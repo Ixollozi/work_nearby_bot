@@ -23,10 +23,9 @@ def create_user(tg_id, username, name, phone, language, latitude, longitude, rol
     db.add(user)
     db.commit()
 
-
-def get_user(tg_id):
-    return db.query(User).filter(User.tg_id == tg_id).first()
-
+def get_user(user_id):
+    user = db.query(User).filter(User.tg_id == user_id).first()
+    return user
 
 def get_user_by_phone(phone):
     return db.query(User).filter(User.phone == phone).first()
@@ -54,6 +53,9 @@ def get_all_admins():
 
 
 # --- Категории ---
+def get_category_id(category_name):
+    category = db.query(Category).filter(Category.name == category_name).first()
+    return category.id if category else None
 
 def get_all_categories():
     name = db.query(Category.name).all()
@@ -72,6 +74,34 @@ def delete_category(category_name):
     db.delete(category)
     db.commit()
 
+
+def add_user_category(user_id, category_id):
+    category = db.query(Category).filter(Category.id == category_id).first()
+    user = db.query(User).filter(User.tg_id == user_id).first()
+
+    if category not in user.categories:
+        user.categories.append(category)
+        db.commit()
+
+
+def get_user_categories(user_id):
+    try:
+        user = db.query(User).filter(User.tg_id == user_id).first()
+        if not user:
+            return []
+        categories = user.categories or []
+        return categories
+    except Exception as e:
+        print(f"[ERROR get_user_categories] {e}")
+        return []
+
+
+
+def delete_user_category(user_id, category_id):
+    category = db.query(Category).filter(Category.id == category_id).first()
+    user = db.query(User).filter(User.tg_id == user_id).first()
+    user.categories.remove(category)
+    db.commit()
 
 
 # --- Вакансии ---
@@ -125,6 +155,8 @@ def get_vacancies_nearby(user_lat, user_lon, radius_meters, category=None):# ф�
 
 def get_vacancy_by_id(vacancy_id):
     return db.query(Vacancy).filter(Vacancy.id == vacancy_id).first()
+
+
 
 # --- Отклики ---
 def respond_to_vacancy(user_id, vacancy_id):
