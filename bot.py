@@ -16,6 +16,8 @@ for i in CATEGORIES:
     if i not in existing_category_names:
         create_category(i)
 
+update_user_role(385688612, '👨‍🔧 соискатель')
+# update_user_role(385688612, '🏢 работодатель')
 
 ############################## registration ##############################
 @bot.message_handler(commands=['start'])
@@ -139,7 +141,7 @@ def get_user_radius(message, name, role, phone, latitude, longitude, language):
         if text in allowed:
             radius = text
             user_name = message.from_user.username or ''
-            create_user(user_id, f'@{user_name}', name, f'+{phone}', language, latitude, longitude, role, radius)
+            create_user(user_id, f'@{user_name}', name, f'{phone}', language, latitude, longitude, role, radius)
             bot.send_message(user_id, lang['create_user'][language], reply_markup=ReplyKeyboardRemove())
             bot.send_message(user_id, 'MENU: ', reply_markup=main_menu(user_id, language))
         else:
@@ -360,8 +362,10 @@ def remove_category(message):
 
 ####################################### main menu #######################################
 
-@bot.callback_query_handler(func=lambda call: call.data in ['find_job', 'create_job', 'favorite', 'settings', 'my_vacancy','category', 'create','delete', 'main_menu'])
+@bot.callback_query_handler(func=lambda call: call.data in
+    ['find_job', 'create_job', 'favorite','settings', 'my_vacancy','category','create','delete', 'main_menu'])
 def handle_main_menu(call):
+    user = get_user(call.from_user.id)
     user_id = call.from_user.id
     try:
         user = get_user(user_id)
@@ -375,12 +379,36 @@ def handle_main_menu(call):
             'en': f'Your selected job categories: \n' + '\n'.join(category_names) if category_names else 'You have not selected any categories.',
             'uz': f'Siz tanlagan ish kategoriyalari: \n' + '\n'.join(category_names) if category_names else 'Siz hali hech qanday kategoriya tanlamagansiz.'
         }
-
-        del_category = {
-            'ru': 'Выберите категорию для удаления',
-            'en': 'Select a category to delete',
-            'uz': 'Kategoriyani o‘chirish uchun tanlang'
+        vacancy = get_user_vacancies(user_id)
+        vacancy_names = [v.title for v in vacancy]
+        user_vac = {
+            'ru': f'Ваши вакансии: \n' + '\n'.join(vacancy_names) if vacancy_names else 'Пусто.',
+            'en': f'Your vacancies: \n' + '\n'.join(vacancy_names) if vacancy_names else 'Empty.',
+            'uz': f'Sizning vakansiyalaringiz: \n' + '\n'.join(vacancy_names) if vacancy_names else 'Bo‘sh.'
         }
+        favorites_raw = get_favorites(user_id)
+        vacancy_ids = [f.vacancy_id for f in favorites_raw]
+
+        vacancies = []
+        for vid in vacancy_ids:
+            v = get_vacancy_by_id(vid)
+            if v:
+                vacancies.append(v)
+
+        if vacancies:
+            titles = [v.title for v in vacancies]
+            user_fav = {
+                'ru': 'Ваши избранные:\n' + '\n'.join(titles),
+                'en': 'Your favorites:\n' + '\n'.join(titles),
+                'uz': 'Sizning tanlanganlaringiz:\n' + '\n'.join(titles)
+            }
+        else:
+            user_fav = {
+                'ru': 'Пусто.',
+                'en': 'Empty.',
+                'uz': 'Bo‘sh.'
+            }
+
 
         if call.data == 'find_job':
             bot.answer_callback_query(call.id, "Поиск работы...")
@@ -388,8 +416,8 @@ def handle_main_menu(call):
             if not categories:
                 msg_send = bot.send_message(user_id, lang['choose_category'][language], reply_markup=category_keyboard(language))
                 bot.register_next_step_handler(msg_send, choose_category, language, 'add')
-            # else:
-                # find_vacancies(user_id, categories, language)
+            else:
+                print(get_vacancies_nearby(user.latitude, user.longitude, user.prefered_radius, [c.name for c in categories]))
 
         elif call.data == 'create_job':
             bot.answer_callback_query(call.id, "Создание вакансии...")
@@ -398,16 +426,18 @@ def handle_main_menu(call):
 
         elif call.data == 'favorite':
             bot.answer_callback_query(call.id, "Избранные...")
+            bot.send_message(user_id, user_fav[language], reply_markup=create_or_delete(language, 'favorite'))
 
         elif call.data == 'settings':
             bot.answer_callback_query(call.id, "Настройки...")
 
         elif call.data == 'my_vacancy':
             bot.answer_callback_query(call.id, "Мои вакансии...")
+            bot.send_message(user_id, user_vac[language], reply_markup=create_or_delete(language, 'vacancy'))
 
         elif call.data == 'category':
             bot.answer_callback_query(call.id, "Выберите категорию...")
-            bot.send_message(user_id, msg[language], reply_markup=create_or_delete(language))
+            bot.send_message(user_id, msg[language], reply_markup=create_or_delete(language, 'category'))
 
         elif call.data == 'create':
             bot.answer_callback_query(call.id, "Добавление категории...")
@@ -416,7 +446,7 @@ def handle_main_menu(call):
 
         elif call.data == 'delete':
             bot.answer_callback_query(call.id, "Удаление категории...")
-            bot.send_message(user_id, del_category[language], reply_markup=category_keyboard(language))
+            bot.send_message(user_id, lang['del_category'][language], reply_markup=category_keyboard(language))
             bot.register_next_step_handler_by_chat_id(user_id, lambda msg: choose_category(msg, language, 'delete'))
 
         elif call.data == 'main_menu':
@@ -663,5 +693,41 @@ def choose_category(message, language, mode):
         print(f"[ERROR choose_category] {e}")
         bot.send_message(message.chat.id, lang['category_error'][language])
 
+#################################### vacancies ####################################
+
+@bot.callback_query_handler(func=lambda call: call.data.startswith('vacancy_'))
+def handle_vacancy_callback(call):
+    user = get_user(call.from_user.id)
+    try:
+        if call.data == 'main_menu':
+            bot.answer_callback_query(call.id, "MENU")
+            bot.edit_message_text("MENU", chat_id=call.message.chat.id, message_id=call.message.message_id)
+        elif call.data == 'vacancy_create':
+            bot.send_message(call.from_user.id, lang['create_job_name'][user.language], reply_markup=ReplyKeyboardRemove())
+            bot.register_next_step_handler(call.message, create_job_name, user.language)
+        elif call.data == 'vacancy_delete':
+            bot.send_message(call.from_user.id, lang['delete_vacancy'][user.language], reply_markup=delete_vacancy_keyboard(user.tg_id))
+            bot.register_next_step_handler(call.message, delete_job, user.language)
+    except Exception as e:
+        print(f"[ERROR handle_vacancy_callback] {e}")
+        bot.register_next_step_handler(call.message, handle_vacancy_callback, call)
+def delete_job(message, language):
+    vacancy_name = message.text
+    try:
+        if vacancy_name == '❌ Отменить':
+            bot.send_message(message.chat.id, 'MENU', reply_markup=main_menu(message.from_user.id, language))
+            return
+
+        success = delete_vacancy(vacancy_name, message.from_user.id)
+        if success:
+            bot.send_message(message.chat.id, lang['delete_vacancy_success'][language], reply_markup=main_menu(message.from_user.id, language))
+        else:
+            bot.send_message(message.chat.id, lang['delete_vacancy_error'][language])
+            bot.register_next_step_handler(message, delete_job, language)
+
+    except Exception as e:
+        print(f"[ERROR delete_job] {e}")
+        bot.send_message(message.chat.id, lang['delete_vacancy_error'][language])
+        bot.register_next_step_handler(message, delete_job, language)
 
 bot.infinity_polling()

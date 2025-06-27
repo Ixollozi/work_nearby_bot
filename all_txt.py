@@ -209,5 +209,34 @@ lang = {
         'ru': '✅ Категория работы удалена',
         'en': '✅ Job category deleted'
     },
-
+    'del_category' : {
+            'ru': 'Выберите обьект для удаления',
+            'en': 'Select a object to delete',
+            'uz': 'O‘chirish uchun tanlang'
+    },
+    'choose_vacancy': {
+        'ru': 'Выберите вакансию',
+        'en': 'Select a job',
+        'uz': 'Ishni tanlang'
+    },
+    'delete_vacancy': {
+        'ru': 'Выберите вакансию для удаления',
+        'en': 'Select a job to delete',
+        'uz': 'O‘chirish uchun tanlang'
+    },
+    'delete_vacancy_success': {
+        'ru': 'Вакансия успешно удалена',
+        'en': 'Job successfully deleted',
+        'uz': 'Ish muvaffaqiyatli o‘chirildi'
+    },
+    'delete_vacancy_error': {
+        'ru': '❗ При удалении вакансии произошла ошибка',
+        'en': '❗ An error occurred while deleting the job',
+        'uz': '❗ Ish o‘chirishda xatolik yuz berdi'
+    },
+    'no_vacancy': {
+        'ru': '❗ Нет вакансий',
+        'en': '❗ No vacancies',
+        'uz': '❗ Ishlar mavjud emas'
+    }
 }

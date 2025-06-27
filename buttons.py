@@ -111,9 +111,48 @@ def category_keyboard(language):
 
     return markup
 
-def create_or_delete(language):
+def create_or_delete(language, mode):
     markup = InlineKeyboardMarkup()
-    markup.add(InlineKeyboardButton(lang['create_or_delete'][language][1], callback_data='delete'),
-               InlineKeyboardButton(lang['create_or_delete'][language][0], callback_data='create'))
+
+    if mode == 'category':
+        create_cb = 'create'
+        delete_cb = 'delete'
+    elif mode == 'vacancy':
+        create_cb = 'vacancy_create'
+        delete_cb = 'vacancy_delete'
+    elif mode == 'favorite':
+        create_cb = 'favorite_create'
+        delete_cb = 'favorite_delete'
+    else:
+        create_cb = 'create'
+        delete_cb = 'delete'
+
+    markup.add(
+        InlineKeyboardButton(lang['create_or_delete'][language][1], callback_data=delete_cb),
+        InlineKeyboardButton(lang['create_or_delete'][language][0], callback_data=create_cb)
+    )
     markup.row(InlineKeyboardButton(lang['create_or_delete'][language][2], callback_data='main_menu'))
     return markup
+
+
+def vacancy_keyboard(tg_id,language):
+    markup = ReplyKeyboardMarkup(resize_keyboard=True)
+    vacancies = get_user_vacancies(tg_id)
+    for vacancy in vacancies:
+        try:
+            translated = GoogleTranslator(source='auto', target=language).translate(vacancy.title)
+        except Exception as e:
+            print(f"[ERROR translate_vacancy] {e}")
+            translated = vacancy.name
+        markup.add(KeyboardButton(translated))
+    return markup
+
+def delete_vacancy_keyboard(tg_id):
+    markup = ReplyKeyboardMarkup(resize_keyboard=True)
+    vacancies = get_user_vacancies(tg_id)
+    for vacancy in vacancies:
+        markup.add(KeyboardButton(vacancy.title))
+
+    markup.row('❌ Отменить')
+    return markup
+
