@@ -11,7 +11,7 @@ lang = {
     },
     'role': {
         'uz': 'Rolingizni tanlang 👇',
-        'ru': 'Выберите свою роль 👇',
+        'ru': 'Выберите свой статус 👇',
         'en': 'Choose your role 👇'
     },
     'role_error': {
@@ -238,5 +238,40 @@ lang = {
         'ru': '❗ Нет вакансий',
         'en': '❗ No vacancies',
         'uz': '❗ Ishlar mavjud emas'
+    },
+    'added_to_favorites': {
+        'ru': '✅ Вакансия добавлена в избранное',
+        'en': '✅ Job added to favorites',
+        'uz': '✅ Ish favorilarga qo‘shildi'
+    },
+    'already_in_favorites': {
+        'ru': '❗ Вакансия уже в избранном',
+        'en': '❗ Job already in favorites',
+        'uz': '❗ Ish favorilarda mavjud'
+    },
+    'no_favorites': {
+        'ru': '❗ У вас нет избранных вакансий',
+        'en': '❗ You have no favorite jobs',
+        'uz': '❗ Siz hech qanday favorilarda ish mavjud emas'
+    },
+    'create_favorites': {
+        'ru': 'Избранное можно создать в разделе " 🔍 Найти работу "',
+        'en': 'Favorites can be created in the " 🔍 Find a job" section',
+        'uz': 'Favorilarni "🔍 Ishni topish" bo‘limida qo‘shishingiz mumkin'
+    },
+    'delete_favorites': {
+        'ru': 'Выберите избранное для удаления',
+        'en': 'Select a favorite to delete',
+        'uz': 'O‘chirish uchun tanlang'
+    },
+    'delete_favorite_success': {
+        'ru': 'Избранное успешно удалено',
+        'en': 'Favorites successfully deleted',
+        'uz': 'Favorilarni muvaffaqiyatli o‘chirildi'
+    },
+    'delete_favorite_error': {
+        'ru': '❗ При удалении избранного произошла ошибка',
+        'en': '❗ An error occurred while deleting favorites',
+        'uz': '❗ Favorilarni o‘chirishda xatolik yuz berdi'
     }
 }

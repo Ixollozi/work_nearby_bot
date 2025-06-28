@@ -1,7 +1,7 @@
 from math import radians, cos, sin, asin, sqrt
 from database import get_db
 from models import *
-
+from all_txt import *
 from sqlalchemy.orm import Session
 from datetime import datetime
 
@@ -24,6 +24,7 @@ def create_user(tg_id, username, name, phone, language, latitude, longitude, rol
     db.commit()
 
 def get_user(user_id):
+    # noinspection PyTypeChecker
     user = db.query(User).filter(User.tg_id == user_id).first()
     return user
 
@@ -130,10 +131,8 @@ def get_user_vacancies(user_id):
     return db.query(Vacancy).filter(Vacancy.user_id == user_id).all()
 
 def calculate_distance(lat1, lon1, lat2, lon2):
-    # Радиус Земли в километрах
-    R = 6371.0
 
-    # Конвертация координат в радианы
+    R = 6371.0
     lat1, lon1, lat2, lon2 = map(radians, [lat1, lon1, lat2, lon2])
 
     dlat = lat2 - lat1
@@ -143,21 +142,17 @@ def calculate_distance(lat1, lon1, lat2, lon2):
     c = 2 * asin(sqrt(a))
 
     distance_km = R * c
-    return distance_km * 1000  # перевод в метры
+    return distance_km * 1000
 
 
 def get_vacancies_nearby(user_lat, user_lon, radius_meters, categories=None):
-    # Получаем все активные вакансии (не истекшие)
     all_vacancies = db.query(Vacancy).filter(Vacancy.expires_at >= datetime.utcnow()).all()
     filtered = []
-
-    # Если категории не указаны, возвращаем пустой список
     if not categories:
         return []
 
     for v in all_vacancies:
-        # Проверяем, входит ли категория вакансии в выбранные пользователем
-        if v.category_fk.name not in categories:
+        if v.category not in categories:
             continue
         # Если выбран "Все вакансии", игнорируем радиус
         if radius_meters == lang['all_vacancies']['ru']:  # Проверяем по русскому варианту
@@ -175,6 +170,9 @@ def get_vacancies_nearby(user_lat, user_lon, radius_meters, categories=None):
 
 def get_vacancy_by_id(vacancy_id):
     return db.query(Vacancy).filter(Vacancy.id == vacancy_id).first()
+
+def get_vacancy_by_title(title):
+    return db.query(Vacancy).filter(Vacancy.title == title).first()
 
 def delete_vacancy(vacancy_name, user_id):
     vacancy = db.query(Vacancy).filter(Vacancy.title == vacancy_name, Vacancy.user_id == user_id).first()
@@ -200,10 +198,18 @@ def add_to_favorites(user_id, vacancy_id):
     db.commit()
 
 
+
 def get_favorites(user_id):
     a = db.query(Favorite).filter(Favorite.user_id == user_id).all()
     return a
 
+def delete_user_favorite(user_id, vacancy_id):
+    favorite = db.query(Favorite).filter(Favorite.user_id == user_id, Favorite.vacancy_id == vacancy_id).first()
+    if favorite:
+        db.delete(favorite)
+        db.commit()
+        return True
+    return False
 
 def is_favorite(user_id, vacancy_id):
     return db.query(Favorite).filter(Favorite.user_id == user_id, Favorite.vacancy_id == vacancy_id).first() is not None

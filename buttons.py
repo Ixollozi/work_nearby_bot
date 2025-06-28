@@ -156,3 +156,30 @@ def delete_vacancy_keyboard(tg_id):
     markup.row('❌ Отменить')
     return markup
 
+
+def get_vacancy_keyboard(lang):
+    markup = InlineKeyboardMarkup(row_width=2)
+    next_vacancy = InlineKeyboardButton("➡️ Следующая", callback_data="next_vacancy")
+    favorite = InlineKeyboardButton("⭐ В избранное", callback_data="add_to_favorite")
+    respond = InlineKeyboardButton("📬 Откликнуться", callback_data="respond")
+    main_menu = InlineKeyboardButton("🏠 Главное меню", callback_data="main_menu")
+    markup.add(next_vacancy, favorite, respond, main_menu)
+    return markup
+
+def delete_favorite_kb(user_id):
+    favorites_raw = get_favorites(user_id)
+    vacancy_ids = [f.vacancy_id for f in favorites_raw]
+    markup = ReplyKeyboardMarkup(resize_keyboard=True)
+
+    vacancies = []
+    for vid in vacancy_ids:
+        v = get_vacancy_by_id(vid)
+        if v:
+            vacancies.append(v)
+    if vacancies:
+        titles = [v.title for v in vacancies]
+        for title in titles:
+            markup.add(KeyboardButton(title))
+
+    markup.row('❌ Отменить')
+    return markup

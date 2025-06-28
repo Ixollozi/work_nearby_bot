@@ -21,7 +21,7 @@ class User(Base):
     language = Column(String, nullable=False)
     latitude = Column(Float, nullable=False)
     longitude = Column(Float, nullable=False)
-    prefered_radius = Column(String, nullable=False)
+    prefered_radius = Column(Integer)
     role = Column(String, nullable=False)  # соискатель / работодатель
     is_admin = Column(Boolean, default=False)
     created_at = Column(DateTime, default=datetime.utcnow)
