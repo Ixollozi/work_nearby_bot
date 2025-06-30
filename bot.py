@@ -3,15 +3,18 @@ from buttons import *
 from service import *
 from telebot.types import InlineKeyboardMarkup, InlineKeyboardButton, ReplyKeyboardRemove
 from datetime import datetime, timedelta, timezone
+from geopy.geocoders import Nominatim
 
 bot = telebot.TeleBot('7981973749:AAE_3acJdzQTfCMsuH9zi46oXtwS_w6Gj5Q')
 ADMINS = [385688612]
 CATEGORIES = ['Разработка и IT', 'Дизайн', 'Маркетинг', 'Продажи', 'Сопровождение', 'Другое']
 chat_pages = {}
 user_create_job_data = {}
-user_vacancy_index = {}  # {user_id: index}
-user_vacancies_list = {}  # {user_id: [(vacancy, distance), ...]}
+user_vacancy_index = {}
+user_vacancies_list = {}
 existing_category_names = [c.name for c in get_all_categories()]
+geolocator = Nominatim(user_agent="Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 "
+                                  "(KHTML, like Gecko) Chrome/113.0.0.0 Safari/537.36")
 
 for i in CATEGORIES:
     if i not in existing_category_names:
@@ -20,6 +23,7 @@ for i in CATEGORIES:
 update_user_role(385688612, '👨‍🔧 соискатель')
 # update_user_role(385688612, '🏢 работодатель')
 
+update_user_prefered_radius(385688612, 1000)
 ############################## registration ##############################
 @bot.message_handler(commands=['start'])
 def start(message):
@@ -89,11 +93,23 @@ def get_user_phone(message, name, role, language):
             phone = message.contact.phone_number
 
             if role == '🏢 работодатель' or role == '🏢 ish beruvchi':
-                bot.send_message(user_id, lang['location_for_job'][language], reply_markup=ReplyKeyboardRemove())
+                try:
+                    user_name = message.from_user.username
+                    create_user(user_id, f'@{user_name}', name, f'+{phone}', language, role = role,
+                                latitude = None, longitude = None, prefered_radius = None)
+                    bot.send_message(user_id, lang['create_user'][language], reply_markup=ReplyKeyboardRemove())
+                    bot.send_message(user_id, 'MENU', reply_markup=main_menu(user_id, language))
+                except Exception as e:
+                    print(f"[ERROR create_user] {e}")
+                    bot.send_message(user_id, "Произошла ошибка при создании пользователя.")
+                    bot.register_next_step_handler(message, get_user_phone, name, role, language)
+                    return
+
+
             else:
                 bot.send_message(user_id, lang['location'][language], reply_markup=ReplyKeyboardRemove())
 
-            bot.register_next_step_handler(
+                bot.register_next_step_handler(
                 message,
                 get_user_location,
                 name, role, phone, language
@@ -426,6 +442,7 @@ def handle_main_menu(call):
                 return
 
             radius = user.prefered_radius
+            print(radius)
             if radius is None:
                 radius = lang['all_vacancies'][language]
 
@@ -584,15 +601,33 @@ def create_job_price(message, language, name, description, currency):
                 'contacts': contacts
             }
 
-            bot.send_message(message.chat.id, lang['create_job_category'][language], reply_markup=category_keyboard(language))
-            bot.register_next_step_handler(message, create_job_category, language, name, description, currency, payment, contacts)
+            bot.send_message(message.chat.id, lang['location_for_job'][language])
+            bot.register_next_step_handler(message, create_job_location, language, name, description, currency, payment, contacts)
 
     except Exception as e:
         print(f"[ERROR create_job_price] {e}")
         bot.register_next_step_handler(message, create_job_price, language, name, description, currency)
 
+def create_job_location(message, language, name, description, currency, payment, contacts):
+    try:
+        if message.location:
+            latitude = message.location.latitude
+            longitude = message.location.longitude
+            location = geolocator.reverse(f"{latitude}, {longitude}", language=language)
+            update_user_location(message.from_user.id, latitude, longitude)
 
-def create_job_category(message, language, name, description, currency, payment, contacts):
+            bot.send_message(message.chat.id, lang['create_job_category'][language], reply_markup=category_keyboard(language))
+            bot.register_next_step_handler(message, create_job_category, language, name, description, currency, payment, contacts, location)
+        else:
+            bot.send_message(message.chat.id, lang['location_error'][language])
+            bot.register_next_step_handler(message, create_job_location, language, name, description, currency, payment, contacts)
+
+    except Exception as e:
+        print(f"[ERROR create_job_location] {e}")
+        bot.send_message(message.chat.id, lang['create_job_location_error'][language])
+        bot.register_next_step_handler(message, create_job_location, language, name, description, currency, payment, contacts)
+
+def create_job_category(message, language, name, description, currency, payment, contacts, location):
     try:
         category = message.text.strip()
         existing_categories = [c.name.lower() for c in get_all_categories()]
@@ -612,18 +647,21 @@ def create_job_category(message, language, name, description, currency, payment,
                       f"📝 Описание:\n {data['description']}\n"
                       f"💰 Заработная плата: {data['price']}\n"
                       f"📂 Категория: {data['category']}\n"
+                      f'📍 Местоположение: {location.address}\n'
                       f"📞 Контакты: {data['contacts']}",
                 'uz': f"Ish vakansiyasini yaratmoqchimisiz:\n"
                       f"📌 Nomi: {data['name']}\n"
                       f"📝 Tavsif:\n {data['description']}\n"
                       f"💰 To‘lov: {data['price']}\n"
                       f"📂 Kategoriya: {data['category']}\n"
+                      f'📍 Manzil: {location.address}\n'
                       f"📞 Kontaktlar: {data['contacts']}",
                 'en': f"Are you sure you want to create this job posting:\n"
                       f"📌 Title: {data['name']}\n"
                       f"📝 Description:\n {data['description']}\n"
                       f"💰 Salary: {data['price']}\n"
                       f"📂 Category: {data['category']}\n"
+                      f'📍 Location: {location.address}\n'
                       f"📞 Contacts: {data['contacts']}"
             }
 
@@ -699,11 +737,15 @@ def show_current_vacancy(bot, user_id, language):
     vacancies = user_vacancies_list.get(user_id)
 
     if not vacancies or index >= len(vacancies):
-        bot.send_message(user_id, lang['no_more_vacancies'][language], reply_markup=main_menu(user_id, language))
+        bot.send_message(user_id, lang['no_vacancy'][language], reply_markup=main_menu(user_id, language))
         return
 
     vacancy, distance = vacancies[index]
-    distance_text = f"{int(distance)} м" if distance > 0 else lang['all_vacancies'][language]
+    distance = get_user(user_id)
+    if distance.prefered_radius is not None and distance.prefered_radius > 0:
+        distance_text = f"{int(distance.prefered_radius)} м"
+    else:
+        distance_text = lang['all_vacancies'][language]
 
     text = {
         'ru': f"📌 {vacancy.title}\n\n"
@@ -839,7 +881,6 @@ def delete_job(message, language):
         print(f"[ERROR delete_job] {e}")
         bot.send_message(message.chat.id, lang['delete_vacancy_error'][language])
         bot.register_next_step_handler(message, delete_job, language)
-
 
 
 

@@ -58,6 +58,19 @@ def update_user_role(user_id: int, new_role: str):
         user.role = new_role
         db.commit()
 
+def update_user_prefered_radius(user_id: int, new_prefered_radius: int):
+    user = db.query(User).filter(User.tg_id == user_id).first()
+    if user:
+        user.prefered_radius = new_prefered_radius
+        db.commit()
+
+def update_user_location(user_id: int, latitude: float, longitude: float):
+    user = db.query(User).filter(User.tg_id == user_id).first()
+    if user:
+        user.latitude = latitude
+        user.longitude = longitude
+        db.commit()
+
 # --- Категории ---
 def get_category_id(category_name):
     category = db.query(Category).filter(Category.name == category_name).first()
@@ -131,42 +144,62 @@ def get_user_vacancies(user_id):
     return db.query(Vacancy).filter(Vacancy.user_id == user_id).all()
 
 def calculate_distance(lat1, lon1, lat2, lon2):
-
     R = 6371.0
     lat1, lon1, lat2, lon2 = map(radians, [lat1, lon1, lat2, lon2])
-
     dlat = lat2 - lat1
     dlon = lon2 - lon1
-
     a = sin(dlat / 2)**2 + cos(lat1) * cos(lat2) * sin(dlon / 2)**2
     c = 2 * asin(sqrt(a))
-
     distance_km = R * c
-    return distance_km * 1000
+    return distance_km
 
 
 def get_vacancies_nearby(user_lat, user_lon, radius_meters, categories=None):
     all_vacancies = db.query(Vacancy).filter(Vacancy.expires_at >= datetime.utcnow()).all()
     filtered = []
+
     if not categories:
         return []
+
+    if user_lat is None or user_lon is None:
+
+        for v in all_vacancies:
+            if v.category in categories:
+                filtered.append((v, 0))
+        return filtered
 
     for v in all_vacancies:
         if v.category not in categories:
             continue
-        # Если выбран "Все вакансии", игнорируем радиус
-        if radius_meters == lang['all_vacancies']['ru']:  # Проверяем по русскому варианту
-            filtered.append((v, 0))  # Добавляем без учета расстояния
-        else:
-            # Рассчитываем расстояние
+
+        if radius_meters == lang['all_vacancies']['ru']:
+            filtered.append((v, 0))
+            continue
+
+
+        try:
+            if isinstance(radius_meters, str):
+                radius_value = int(radius_meters.replace('m', ''))
+            else:
+                radius_value = int(radius_meters)
+        except (ValueError, TypeError):
+            print(f"[ERROR] Неверный формат радиуса: {radius_meters}")
+            continue
+
+
+        try:
             distance = calculate_distance(user_lat, user_lon, v.latitude, v.longitude)
-            radius_value = int(radius_meters.replace('m', '')) if isinstance(radius_meters, str) else radius_meters
             if distance <= radius_value:
                 filtered.append((v, distance))
+        except Exception as e:
+            print(f"[ERROR] Не удалось рассчитать расстояние для вакансии ID={v.id}: {e}")
+            continue
 
-    # Сортируем по расстоянию (если радиус учитывается)
-    return sorted(filtered, key=lambda x: x[1])
 
+    if radius_meters != lang['all_vacancies']['ru']:
+        filtered.sort(key=lambda x: x[1])
+
+    return filtered
 
 def get_vacancy_by_id(vacancy_id):
     return db.query(Vacancy).filter(Vacancy.id == vacancy_id).first()

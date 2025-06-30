@@ -19,8 +19,8 @@ class User(Base):
     name = Column(String, nullable=False)
     phone = Column(String, nullable=False)
     language = Column(String, nullable=False)
-    latitude = Column(Float, nullable=False)
-    longitude = Column(Float, nullable=False)
+    latitude = Column(Float )
+    longitude = Column(Float)
     prefered_radius = Column(Integer)
     role = Column(String, nullable=False)  # соискатель / работодатель
     is_admin = Column(Boolean, default=False)
