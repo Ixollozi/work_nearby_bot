@@ -1,7 +1,6 @@
 from telebot import types
-from all_txt import lang
-from service import *
-from telebot.types import InlineKeyboardMarkup, InlineKeyboardButton, ReplyKeyboardMarkup, KeyboardButton
+from services.service import *
+from telebot.types import InlineKeyboardMarkup, InlineKeyboardButton, ReplyKeyboardMarkup, KeyboardButton, ReplyKeyboardRemove
 from deep_translator import GoogleTranslator
 
 

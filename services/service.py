@@ -1,7 +1,6 @@
 from math import radians, cos, sin, asin, sqrt
-from database import get_db
-from models import *
-from all_txt import *
+from database.base import *
+from configuration.lang_loader import *
 from sqlalchemy.orm import Session
 from datetime import datetime
 
@@ -52,23 +51,11 @@ def get_all_admins():
     name = db.query(User.name).filter(User.is_admin == True).all()
     return name
 
-def update_user_role(user_id: int, new_role: str):
+def update_user_field(user_id, **kwargs):
     user = db.query(User).filter(User.tg_id == user_id).first()
     if user:
-        user.role = new_role
-        db.commit()
-
-def update_user_prefered_radius(user_id: int, new_prefered_radius: int):
-    user = db.query(User).filter(User.tg_id == user_id).first()
-    if user:
-        user.prefered_radius = new_prefered_radius
-        db.commit()
-
-def update_user_location(user_id: int, latitude: float, longitude: float):
-    user = db.query(User).filter(User.tg_id == user_id).first()
-    if user:
-        user.latitude = latitude
-        user.longitude = longitude
+        for key, value in kwargs.items():
+            setattr(user, key, value)
         db.commit()
 
 # --- Категории ---
@@ -253,3 +240,4 @@ def delete_expired_vacancies():
     for v in expired:
         db.delete(v)
     db.commit()
+

@@ -1,7 +1,31 @@
+from sqlalchemy import create_engine
+from sqlalchemy.orm import sessionmaker, declarative_base
 from sqlalchemy import Column, Integer, String, Float, ForeignKey, Boolean, DateTime, Text, Table
 from sqlalchemy.orm import relationship
 from datetime import datetime, timedelta
-from database import Base, engine
+import os
+
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+db_path = os.path.join(BASE_DIR, 'bot_base.db')
+
+engine = create_engine(f'sqlite:///{db_path}')
+
+Session = sessionmaker(bind=engine)
+
+Base = declarative_base()
+
+def get_db():
+    db = Session()
+    try:
+        yield db
+    except Exception as e:
+        db.rollback()
+        raise e
+    finally:
+        db.close()
+
+
+
 
 # Промежуточная таблица для связи "многие ко многим" между User и Category
 user_categories = Table(
@@ -77,4 +101,7 @@ class Response(Base):
 
     vacancy = relationship("Vacancy", back_populates="responses")
 
+# User.__table__.drop(engine)
 Base.metadata.create_all(bind=engine)
+
+
