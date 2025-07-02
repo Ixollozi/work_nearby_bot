@@ -170,7 +170,7 @@ def agree_job(message, language, name, description, category, payment, contacts)
             longitude=user.longitude,
             contact=contacts,
             category=category,
-            expires_at=datetime.now(timezone.utc) + timedelta(days=7)
+            expires_at=datetime.now(timezone.utc) + timedelta(days=30)
         )
 
         bot.send_message(message.chat.id, lang['create_job_agree'][language], reply_markup=ReplyKeyboardRemove())

@@ -94,6 +94,16 @@
       "uz": "📂 Kategoriyalar tanlash",
       "ru": "📂 Выбор категорий",
       "en": "📂 Select categories"
+    },
+    "my_response": {
+      "uz": "Mening fikrim",
+      "ru": "Мои отклики",
+      "en": "My responses"
+    },
+    "user_responses": {
+      "uz": "👥 Foydalanuvchi fikri",
+      "ru": "👥 Отклики пользователей",
+      "en": "👥 Users responses"
     }
   },
   "create_job_name": {
@@ -117,9 +127,9 @@
     "en": "📄 Please enter a job description"
   },
   "create_job_description_error": {
-    "uz": "❗ Tavsif 200 belgidan uzun bo'lishi kerak.",
-    "ru": "❗ Описание должно быть длиннее 200 символов.",
-    "en": "❗ Description must be longer than 200 characters."
+    "uz": "❗ Ish tavsifini 200 va 1000 belgidan uzun bo‘lishi kerak.",
+    "ru": "❗ Описание должно быть длиннее 200 и меньше 1000 символов.",
+    "en": "❗ Description must be longer than 200 and shorter than 1000 characters."
   },
   "choose_currency": {
     "uz": "💰 Valyutani tanlang",
@@ -203,6 +213,26 @@
       "Asosiy menyu"
     ]
   },
+  "get_vacancy_kb": {
+    "ru": [
+      "➡\uFE0F Следующая",
+      "⭐ В избранное",
+      "\uD83D\uDCEC Откликнуться",
+      "Главное меню"
+    ],
+    "en": [
+      "➡\uFE0F Next",
+      "⭐ Favorites",
+      "\uD83D\uDCEC Apply",
+      "Main menu"
+    ],
+    "uz": [
+      "➡\uFE0F Keyingi",
+      "⭐ Sevimlilar",
+      "\uD83D\uDCEC Talab qilish",
+      "Asosiy menyu"
+    ]
+  },
   "category_exists": {
     "uz": "❗ Bu kategoriya allaqachon mavjud",
     "ru": "❗ Эта категория уже существует",
@@ -282,5 +312,25 @@
     "ru": "❗ При удалении избранного произошла ошибка",
     "en": "❗ An error occurred while deleting favorites",
     "uz": "❗ Favorilarni o‘chirishda xatolik yuz berdi"
+  },
+  "response_sent": {
+    "ru": "✅Заявка отправлена",
+    "en": "✅ Response sent",
+    "uz": "✅ Javob yuborildi"
+  },
+  "no_response": {
+    "ru": "❗ Нет заявок",
+    "en": "❗ No responses",
+    "uz": "❗ Javoblar mavjud emas"
+  },
+  "already_responded": {
+    "ru": "❗ Вы уже откликнулись",
+    "en": "❗ You have already responded",
+    "uz": "❗ Siz allaqachon javob berdingiz"
+  },
+  "please_wait": {
+    "ru": "Пожалуйста, подождите",
+    "en": "Please wait",
+    "uz": "Iltimos, kuting"
   }
 }

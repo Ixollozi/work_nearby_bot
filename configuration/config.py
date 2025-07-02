@@ -16,6 +16,8 @@ chat_pages = {}
 user_create_job_data = {}
 user_vacancy_index = {}
 user_vacancies_list = {}
+user_responses_list = {}
+user_response_index = {}
 
 # Геолокатор
 geolocator = Nominatim(user_agent="Ishbor_telegram_bot")
@@ -30,8 +32,10 @@ try:
 except Exception as e:
     print(f"Ошибка при инициализации категорий: {e}")
 
-update_user_field(385688612, role='👨‍🔧 соискатель')
-# update_user_field(385688612, role='🏢 работодатель')
+delete_expired_vacancies()
+delete_expired_responses()
+# update_user_field(385688612, role='👨‍🔧 соискатель')
+update_user_field(385688612, role='🏢 работодатель')
 update_user_field(385688612, prefered_radius=None)
 
 print("Конфигурация загружена успешно")

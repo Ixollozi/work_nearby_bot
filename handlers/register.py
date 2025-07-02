@@ -10,19 +10,19 @@ def start(message):
         if user:
             bot.send_message(user_id, 'MENU: ', reply_markup=main_menu(user_id, user.language))
         else:
-            bot.send_message(user_id, '\n🇺🇿 O\'zbek tili\n🇷🇺 Русский ', reply_markup=get_language())
+            bot.send_message(user_id, '\n🇺🇿 O\'zbek tili\n🇷🇺 Русский\n🇬🇧 English ', reply_markup=get_language())
     except Exception as e:
         print(f"[ERROR start] {e}")
         bot.send_message(user_id, "Произошла ошибка. Попробуйте позже.")
 
 
-@bot.callback_query_handler(func=lambda call: call.data in ['uz', 'ru'])
+@bot.callback_query_handler(func=lambda call: call.data in ['uz', 'ru', 'en'])
 def hello(call):
     user_id = call.from_user.id
     try:
         language = call.data
         bot.delete_message(user_id, call.message.message_id)
-        bot.send_message(user_id, lang['hello'][language])
+        bot.send_message(user_id, lang['hello'][language], reply_markup=ReplyKeyboardRemove())
         bot.register_next_step_handler_by_chat_id(user_id, get_user_name, language)
     except Exception as e:
         print(f"[ERROR hello] {e}")

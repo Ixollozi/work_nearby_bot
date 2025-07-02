@@ -1,58 +1,20 @@
 from handlers.find_job import *
 from handlers.vacancy import create_job_name
+from configuration.config import user_responses_list, user_response_index
 import random
 
 
 @bot.callback_query_handler(func=lambda call: call.data in
-    ['find_job', 'create_job', 'favorite','settings', 'my_vacancy','category','create','delete', 'main_menu'])
+                                              ['find_job', 'create_job', 'favorite', 'settings', 'my_vacancy',
+                                               'category', 'create', 'delete', 'main_menu', 'user_responses'])
 def handle_main_menu(call):
     user_id = call.from_user.id
     try:
         user = get_user(user_id)
         language = user.language if user else 'ru'
 
-        categories = get_user_categories(user_id)
-        category_names = [c.name for c in categories]
-        msg_text = {
-            'ru': f'Ваш выбор поиска по категориям:\n' + '\n'.join(category_names) if category_names else 'Вы не выбрали ни одной категории.',
-            'en': f'Your selected job categories:\n' + '\n'.join(category_names) if category_names else 'You have not selected any categories.',
-            'uz': f'Siz tanlagan ish kategoriyalari:\n' + '\n'.join(category_names) if category_names else 'Siz hali hech qanday kategoriya tanlamagansiz.'
-        }
-
-        vacancy = get_user_vacancies(user_id)
-        vacancy_names = [v.title for v in vacancy]
-        user_vac_text = {
-            'ru': f'Ваши вакансии:\n' + '\n'.join(vacancy_names) if vacancy_names else 'Пусто.',
-            'en': f'Your vacancies:\n' + '\n'.join(vacancy_names) if vacancy_names else 'Empty.',
-            'uz': f'Sizning vakansiyalaringiz:\n' + '\n'.join(vacancy_names) if vacancy_names else 'Bo‘sh.'
-        }
-        favorites_raw = get_favorites(user_id)
-        vacancy_ids = [f.vacancy_id for f in favorites_raw]
-
-        vacancies = []
-        for vid in vacancy_ids:
-            v = get_vacancy_by_id(vid)
-            if v:
-                vacancies.append(v)
-
-        if vacancies:
-            titles = [v.title for v in vacancies]
-            user_fav = {
-                'ru': 'Ваши избранные:\n' + '\n'.join(titles),
-                'en': 'Your favorites:\n' + '\n'.join(titles),
-                'uz': 'Sizning tanlanganlaringiz:\n' + '\n'.join(titles)
-            }
-        else:
-            user_fav = {
-                'ru': 'Пусто.',
-                'en': 'Empty.',
-                'uz': 'Bo‘sh.'
-            }
-
         if call.data == 'find_job':
             bot.answer_callback_query(call.id, "Поиск работы...")
-            user = get_user(user_id)
-            language = user.language
             categories = [c.name for c in get_user_categories(user_id)]
 
             if not categories:
@@ -60,30 +22,17 @@ def handle_main_menu(call):
                 bot.register_next_step_handler_by_chat_id(user_id, choose_category, language, 'add')
                 return
 
-            radius = user.prefered_radius
-            if radius is None:
-                radius = lang['all_vacancies'][language]
-
-
-            vacancies_with_distance = get_vacancies_nearby(
-                user.latitude,
-                user.longitude,
-                radius_meters=radius,
-                categories=categories
-            )
-
+            radius = user.prefered_radius if user.prefered_radius else lang['all_vacancies'][language]
+            vacancies_with_distance = get_vacancies_nearby(user.latitude, user.longitude, radius_meters=radius,
+                                                           categories=categories)
             random.shuffle(vacancies_with_distance)
 
             if not vacancies_with_distance:
-                print('menu has no vacancy')
                 bot.send_message(user_id, lang['no_vacancy'][language], reply_markup=main_menu(user_id, language))
                 return
 
-            # Сохраняем состояние
             user_vacancies_list[user_id] = vacancies_with_distance
             user_vacancy_index[user_id] = 0
-
-            # Показываем первую вакансию
             show_current_vacancy(bot, user_id, language)
 
         elif call.data == 'create_job':
@@ -93,26 +42,100 @@ def handle_main_menu(call):
 
         elif call.data == 'favorite':
             bot.answer_callback_query(call.id, "Избранные...")
-            bot.send_message(user_id, user_fav[language], reply_markup=create_or_delete(language, 'favorite'))
+            favorites_raw = get_favorites(user_id)
+            vacancies = [get_vacancy_by_id(f.vacancy_id) for f in favorites_raw]
+            vacancies = [v for v in vacancies if v]
+
+            if vacancies:
+                titles = [v.title for v in vacancies]
+                user_fav = {
+                    'ru': 'Ваши избранные:\n' + '\n'.join(titles),
+                    'en': 'Your favorites:\n' + '\n'.join(titles),
+                    'uz': 'Sizning tanlanganlaringiz:\n' + '\n'.join(titles)
+                }
+                bot.send_message(user_id, user_fav[language], reply_markup=create_or_delete(language, 'favorite'))
+            else:
+                user_fav = {'ru': 'Пусто.', 'en': 'Empty.', 'uz': 'Bosh.'}
+                bot.send_message(user_id, user_fav[language], reply_markup=create_or_delete(language, 'favorite'))
+
+
 
         elif call.data == 'settings':
             bot.answer_callback_query(call.id, "Настройки...")
 
         elif call.data == 'my_vacancy':
             bot.answer_callback_query(call.id, "Мои вакансии...")
-            bot.send_message(user_id, user_vac_text[language], reply_markup=create_or_delete(language, 'vacancy'))
+            vacancies = get_user_vacancies(user_id)
+            v = [v for v in vacancies]
+
+            for vacancy in v:
+                responses_count = get_vacancy_responses_count(vacancy.id)
+                text = {
+                    'ru': f"📌 {vacancy.title}\n\n"
+                          f"📝 {vacancy.description}\n\n"
+                          f"💰 {vacancy.payment}\n"
+                          f"📂 Категория: {vacancy.category}\n"
+                          f"📍 Адрес: {get_address_from_coordinates(vacancy.latitude, vacancy.longitude)}\n"
+                          f"👥 Откликов: {responses_count}\n"
+                          f"📅 Создано: {vacancy.created_at.strftime('%d.%m.%Y %H:%M')}\n\n",
+                    'uz': f"📌 {vacancy.title}\n\n"
+                          f"📝 {vacancy.description}\n\n"
+                          f"💰 {vacancy.payment}\n"
+                          f"📂 Kategoriya: {vacancy.category}\n"
+                          f"📍 Manzil: {get_address_from_coordinates(vacancy.latitude, vacancy.longitude)}\n"
+                          f"👥 Javoblar: {responses_count}\n"
+                          f"📅 Yaratilgan: {vacancy.created_at.strftime('%d.%m.%Y %H:%M')}\n\n",
+                    'en': f"📌 {vacancy.title}\n\n"
+                          f"📝 {vacancy.description}\n\n"
+                          f"💰 {vacancy.payment}\n"
+                          f"📂 Category: {vacancy.category}\n"
+                          f"📍 Address: {get_address_from_coordinates(vacancy.latitude, vacancy.longitude)}\n"
+                          f"👥 Responses: {responses_count}\n"
+                          f"📅 Created: {vacancy.created_at.strftime('%d.%m.%Y %H:%M')}\n\n"}
+
+                bot.send_message(user_id, text[language], reply_markup=create_or_delete(language, 'vacancy'))
+
+                if not vacancy:
+                    bot.send_message(user_id, lang['no_vacancy'][language], reply_markup=main_menu(user_id, language))
+                    return
+
+
+        elif call.data == 'user_responses':
+            bot.answer_callback_query(call.id, "Отклики...")
+            responses = get_user_responses(user_id)
+            random.shuffle(responses)
+
+            if not responses:
+                bot.send_message(user_id, lang['no_response'][language], reply_markup=main_menu(user_id, language))
+                return
+            else:
+                bot.send_message(user_id, lang['please_wait'][language])
+                user_responses_list[user_id] = responses
+                user_response_index[user_id] = 0
+                show_current_response(bot, user_id, language)
+
 
         elif call.data == 'category':
             bot.answer_callback_query(call.id, "Выберите категорию...")
+            categories = get_user_categories(user_id)
+            category_names = [c.name for c in categories]
+            msg_text = {
+                'ru': f'Ваш выбор поиска по категориям:\n' + '\n'.join(
+                    category_names) if category_names else 'Вы не выбрали ни одной категории.',
+                'en': f'Your selected job categories:\n' + '\n'.join(
+                    category_names) if category_names else 'You have not selected any categories.',
+                'uz': f'Siz tanlagan ish kategoriyalari:\n' + '\n'.join(
+                    category_names) if category_names else 'Siz hali hech qanday kategoriya tanlamagansiz.'
+            }
             bot.send_message(user_id, msg_text[language], reply_markup=create_or_delete(language, 'category'))
 
         elif call.data == 'create':
-            bot.answer_callback_query(call.id, "Добавление категории...")
+            bot.answer_callback_query(call.id, "Добавление...")
             bot.send_message(user_id, lang['choose_category'][language], reply_markup=category_keyboard(language))
             bot.register_next_step_handler_by_chat_id(user_id, lambda msg: choose_category(msg, language, 'add'))
 
         elif call.data == 'delete':
-            bot.answer_callback_query(call.id, "Удаление категории...")
+            bot.answer_callback_query(call.id, "Удаление...")
             bot.send_message(user_id, lang['del_category'][language], reply_markup=category_keyboard(language))
             bot.register_next_step_handler_by_chat_id(user_id, lambda msg: choose_category(msg, language, 'delete'))
 
@@ -123,4 +146,90 @@ def handle_main_menu(call):
     except Exception as e:
         print(f"[ERROR handle_main_menu] {e}")
         bot.answer_callback_query(call.id, "Произошла ошибка")
+
+
+def show_current_response(bot, user_id, language, call=None):
+    responses = user_responses_list.get(user_id, [])
+    index = user_response_index.get(user_id, 0)
+
+    if not responses:
+        bot.send_message(user_id, lang['no_response'][language], reply_markup=main_menu(user_id, language))
+        return
+
+    if index < 0 or index >= len(responses):
+        index = 0
+
+    response = responses[index]
+    vacancy = get_vacancy_by_id(response.vacancy_id)
+    user = get_user(response.user_id)
+
+    text = {
+        'ru': f"📌 {vacancy.title}\n\n"
+              f"📝 {vacancy.description}\n\n"
+              f"💰 {vacancy.payment}\n"
+              f"📂 Категория: {vacancy.category}\n"
+              f"📍 Адрес: {get_address_from_coordinates(vacancy.latitude, vacancy.longitude)}\n"
+              f"📅 Создано: {vacancy.created_at.strftime('%d.%m.%Y %H:%M')}\n\n"
+              f"👥 Откликнулся: {user.phone + ' ' + user.username}\n\n"
+              f"📄 Отклик {index + 1} из {len(responses)}",
+        'uz': f"📌 {vacancy.title}\n\n"
+              f"📝 {vacancy.description}\n\n"
+              f"💰 {vacancy.payment}\n"
+              f"📂 Kategoriya: {vacancy.category}\n"
+              f"📍 Manzil: {get_address_from_coordinates(vacancy.latitude, vacancy.longitude)}\n"
+              f"📅 Yaratilgan: {vacancy.created_at.strftime('%d.%m.%Y %H:%M')}\n\n"
+              f"👥 Javob berdi: {user.phone + ' ' + user.username}\n\n"
+              f"📄 Javob {index + 1} dan {len(responses)}",
+        'en': f"📌 {vacancy.title}\n\n"
+              f"📝 {vacancy.description}\n\n"
+              f"💰 {vacancy.payment}\n"
+              f"📂 Category: {vacancy.category}\n"
+              f"📍 Address: {get_address_from_coordinates(vacancy.latitude, vacancy.longitude)}\n"
+              f"📅 Created: {vacancy.created_at.strftime('%d.%m.%Y %H:%M')}\n\n"
+              f"👥 Responded: {user.phone + ' ' + user.username}\n\n"
+              f"📄 Response {index + 1} of {len(responses)}"
+    }
+
+    markup = navigation()
+
+    try:
+        if call:
+            # Если есть call, редактируем сообщение
+            bot.edit_message_text(
+                chat_id=call.message.chat.id,
+                message_id=call.message.message_id,
+                text=text[language],
+                reply_markup=markup
+            )
+        else:
+            # Первый вызов — просто отправляем
+            bot.send_message(user_id, text[language], reply_markup=markup)
+
+    except Exception as e:
+        print(f"[ERROR show_current_response] {e}")
+        bot.send_message(user_id, text[language], reply_markup=markup)
+
+
+
+@bot.callback_query_handler(func=lambda call: call.data in ['response_prev', 'response_next'])
+def paginate_responses(call):
+    user_id = call.from_user.id
+    try:
+        user = get_user(user_id)
+        language = user.language if user else 'ru'
+        index = user_response_index.get(user_id, 0)
+
+        if call.data == 'response_prev':
+            user_response_index[user_id] = max(index - 1, 0)
+        elif call.data == 'response_next':
+            user_response_index[user_id] = min(index + 1, len(user_responses_list[user_id]) - 1)
+
+        show_current_response(bot, user_id, language, call)
+
+    except Exception as e:
+        print(f"[ERROR paginate_responses] {e}")
+        bot.answer_callback_query(call.id, "Ошибка при переключении откликов")
+
+
+
 

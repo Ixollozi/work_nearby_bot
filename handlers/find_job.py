@@ -1,6 +1,5 @@
 from configuration.config import user_vacancy_index, user_vacancies_list
 from configuration.utils import *
-from services.service import *
 from services.buttons import *
 
 
@@ -68,6 +67,12 @@ def handle_vacancy_actions(call):
     elif call.data == 'respond':
         index = user_vacancy_index.get(user_id, 0)
         vacancy_id = user_vacancies_list[user_id][index][0].id
+        vacancy = get_user_responses(user_id)
+        for i in vacancy:
+            if i.vacancy_id == vacancy_id:
+                bot.answer_callback_query(call.id, lang['already_responded'][user.language])
+                return
+
         respond_to_vacancy(user_id, vacancy_id)
         bot.answer_callback_query(call.id, lang['response_sent'][language])
     elif call.data == 'main_menu':

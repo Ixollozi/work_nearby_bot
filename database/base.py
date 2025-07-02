@@ -95,13 +95,14 @@ class Favorite(Base):
 class Response(Base):
     __tablename__ = 'responses'
     id = Column(Integer, primary_key=True)
-    user_id = Column(Integer, ForeignKey('users.id'))  # кто откликнулся
+    user_id = Column(Integer, ForeignKey('users.tg_id'))
     vacancy_id = Column(Integer, ForeignKey('vacancies.id'))
     response_time = Column(DateTime, default=datetime.utcnow)
+    expires_at = Column(DateTime, default=lambda: datetime.utcnow() + timedelta(days=30))
 
     vacancy = relationship("Vacancy", back_populates="responses")
 
-# User.__table__.drop(engine)
+
 Base.metadata.create_all(bind=engine)
 
 

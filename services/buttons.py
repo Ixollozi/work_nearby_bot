@@ -8,7 +8,8 @@ from deep_translator import GoogleTranslator
 def get_language():
     markup = InlineKeyboardMarkup()
     markup.add(InlineKeyboardButton('Uzbek', callback_data='uz'),
-               InlineKeyboardButton('Русский', callback_data='ru'))
+               InlineKeyboardButton('Русский', callback_data='ru'),
+               InlineKeyboardButton('English', callback_data='en'))
     return markup
 
 def get_phone(language):
@@ -22,6 +23,8 @@ def get_role_keyboard(language):
     markup = ReplyKeyboardMarkup(resize_keyboard=True, one_time_keyboard=True)
     if language == 'uz':
         markup.add(KeyboardButton("👨‍🔧 Аrizachi"), KeyboardButton("🏢 Ish beruvchi"))
+    elif language == 'en':
+        markup.add(KeyboardButton("👨‍🔧 Seeker"), KeyboardButton("🏢 Employer"))
     else:
         markup.add(KeyboardButton("👨‍🔧 Соискатель"), KeyboardButton("🏢 Работодатель"))
     return markup
@@ -40,17 +43,20 @@ def get_radius(language):
 def main_menu(tg_id,language):
     markup = InlineKeyboardMarkup(row_width=2)
     user = get_user(tg_id)
-    if user.role == '👨‍🔧 соискатель' or user.role == '👨‍🔧 arizachi':
+    if user.role == '👨‍🔧 соискатель' or user.role == '👨‍🔧 arizachi' or user.role == '👨‍🔧 seeker':
         find_job = InlineKeyboardButton(lang['main_menu']['find_job'][language], callback_data='find_job')
         category = InlineKeyboardButton(lang['main_menu']['category'][language], callback_data='category')
+        my_response = InlineKeyboardButton(lang['main_menu']['my_response'][language], callback_data='my_response')
         favorite = InlineKeyboardButton(lang['main_menu']['favorite'][language], callback_data='favorite')
         settings = InlineKeyboardButton(lang['main_menu']['settings'][language], callback_data='settings')
-        markup.add(find_job,category, favorite, settings)
-    elif user.role == '🏢 работодатель' or user.role == '🏢 ish beruvchi':
+        markup.row(find_job,category, my_response)
+        markup.add(favorite, settings)
+    elif user.role == '🏢 работодатель' or user.role == '🏢 ish beruvchi' or user.role == '🏢 employer':
         find_job = InlineKeyboardButton(lang['main_menu']['create_job'][language], callback_data='create_job')
         my_vacancy = InlineKeyboardButton(lang['main_menu']['my_jobs'][language], callback_data='my_vacancy')
+        user_response = InlineKeyboardButton(lang['main_menu']['user_responses'][language], callback_data='user_responses')
         settings = InlineKeyboardButton(lang['main_menu']['settings'][language], callback_data='settings')
-        markup.add(find_job,my_vacancy, settings)
+        markup.add(find_job,my_vacancy,user_response, settings)
     return markup
 
 def admin_menu():
@@ -156,12 +162,12 @@ def delete_vacancy_keyboard(tg_id):
     return markup
 
 
-def get_vacancy_keyboard(lang):
+def get_vacancy_keyboard(language):
     markup = InlineKeyboardMarkup(row_width=2)
-    next_vacancy = InlineKeyboardButton("➡️ Следующая", callback_data="next_vacancy")
-    favorite = InlineKeyboardButton("⭐ В избранное", callback_data="add_to_favorite")
-    respond = InlineKeyboardButton("📬 Откликнуться", callback_data="respond")
-    main_menu = InlineKeyboardButton("🏠 Главное меню", callback_data="main_menu")
+    next_vacancy = InlineKeyboardButton(lang['get_vacancy_kb'][language][0], callback_data="next_vacancy")
+    favorite = InlineKeyboardButton(lang['get_vacancy_kb'][language][1], callback_data="add_to_favorite")
+    respond = InlineKeyboardButton(lang['get_vacancy_kb'][language][2], callback_data="respond")
+    main_menu = InlineKeyboardButton(lang['get_vacancy_kb'][language][3], callback_data="main_menu")
     markup.add(next_vacancy, favorite, respond, main_menu)
     return markup
 
@@ -182,3 +188,15 @@ def delete_favorite_kb(user_id):
 
     markup.row('❌ Отменить')
     return markup
+
+
+def navigation():
+    nav = InlineKeyboardMarkup()
+    nav.row(
+        InlineKeyboardButton("⬅️", callback_data="response_prev"),
+        InlineKeyboardButton("🏠", callback_data="main_menu"),
+        InlineKeyboardButton("➡️", callback_data="response_next")
+
+    )
+    return nav
+

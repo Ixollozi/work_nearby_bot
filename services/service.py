@@ -1,6 +1,7 @@
 from math import radians, cos, sin, asin, sqrt
 from database.base import *
 from configuration.lang_loader import *
+from geopy.geocoders import Nominatim
 from sqlalchemy.orm import Session
 from datetime import datetime
 
@@ -194,6 +195,11 @@ def get_vacancy_by_id(vacancy_id):
 def get_vacancy_by_title(title):
     return db.query(Vacancy).filter(Vacancy.title == title).first()
 
+def get_address_from_coordinates(latitude, longitude):
+    geolocator = Nominatim(user_agent="vacancy_bot")
+    location = geolocator.reverse((latitude,longitude))
+    return location
+
 def delete_vacancy(vacancy_name, user_id):
     vacancy = db.query(Vacancy).filter(Vacancy.title == vacancy_name, Vacancy.user_id == user_id).first()
     if vacancy:
@@ -210,6 +216,13 @@ def respond_to_vacancy(user_id, vacancy_id):
     response = Response(user_id=user_id, vacancy_id=vacancy_id)
     db.add(response)
     db.commit()
+
+def get_user_responses(user_id):
+    return db.query(Response).filter(Response.user_id == user_id).all()
+
+def get_vacancy_responses_count(vacancy_id):
+    return db.query(Response).filter(Response.vacancy_id == vacancy_id).count()
+
 
 # --- Избранное ---
 def add_to_favorites(user_id, vacancy_id):
@@ -237,6 +250,12 @@ def is_favorite(user_id, vacancy_id):
 # --- Удаление ---
 def delete_expired_vacancies():
     expired = db.query(Vacancy).filter(Vacancy.expires_at < datetime.utcnow()).all()
+    for v in expired:
+        db.delete(v)
+    db.commit()
+
+def delete_expired_responses():
+    expired = db.query(Response).filter(Response.expires_at < datetime.utcnow()).all()
     for v in expired:
         db.delete(v)
     db.commit()
