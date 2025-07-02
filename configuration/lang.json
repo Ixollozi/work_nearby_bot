@@ -64,6 +64,11 @@
     "ru": "✅ Пользователь успешно создан!",
     "en": "✅ User successfully created!"
   },
+  "profile_updated": {
+    "uz": "✅ Profil muvaffaqiyatli yangilandi!",
+    "ru": "✅ Профиль успешно обновлен!",
+    "en": "✅ Profile successfully updated!"
+  },
   "main_menu": {
     "find_job": {
       "uz": "🔍 Ish qidirish",
@@ -71,7 +76,7 @@
       "en": "🔍 Job search"
     },
     "create_job": {
-      "uz": "➕ Yangi ish joyi qo‘shish",
+      "uz": "➕ Yangi ish joyi qo'shish",
       "ru": "➕ Добавить вакансию",
       "en": "➕ Create a job post"
     },
@@ -112,12 +117,12 @@
     "en": "📝 Enter the job title"
   },
   "create_job_name_len": {
-    "uz": "❗ Ish nomi 10 va 50 belgidan uzun bo‘lishi kerak.",
+    "uz": "❗ Ish nomi 10 va 50 belgidan uzun bo'lishi kerak.",
     "ru": "❗ Название должно быть длиннее 10 и меньше 50 символов .",
     "en": "❗ The title must be longer than 10 and shorter than 50 characters."
   },
   "create_job_name_error": {
-    "uz": "❗ Ish nomi noto‘g‘ri. Qaytadan kiriting.",
+    "uz": "❗ Ish nomi noto'g'ri. Qaytadan kiriting.",
     "ru": "❗ Неверное название работы. Попробуйте снова.",
     "en": "❗ Invalid job title. Please try again."
   },
@@ -127,7 +132,7 @@
     "en": "📄 Please enter a job description"
   },
   "create_job_description_error": {
-    "uz": "❗ Ish tavsifini 200 va 1500 belgidan uzun bo‘lishi kerak.",
+    "uz": "❗ Ish tavsifini 200 va 1500 belgidan uzun bo'lishi kerak.",
     "ru": "❗ Описание должно быть длиннее 200 и меньше 1500 символов.",
     "en": "❗ Description must be longer than 200 and shorter than 1500 characters."
   },
@@ -147,27 +152,27 @@
     "en": "📂 Choose a job category"
   },
   "create_job_category_error": {
-    "uz": "❗ Ish kategoriyasi noto‘g‘ri. Qaytadan kiriting.",
+    "uz": "❗ Ish kategoriyasi noto'g'ri. Qaytadan kiriting.",
     "ru": "❗ Неверная категория работы. Попробуйте снова.",
     "en": "❗ Invalid job category. Please try again."
   },
   "create_job_price": {
-    "uz": "💵 Ish uchun to‘lovni kiriting",
+    "uz": "💵 Ish uchun to'lovni kiriting",
     "ru": "💵 Укажите оплату за работу",
     "en": "💵 Enter the job payment amount"
   },
   "create_job_price_error": {
-    "uz": "❗ Ish uchun to‘lovni faqat raqamlardan kiriting",
+    "uz": "❗ Ish uchun to'lovni faqat raqamlardan kiriting",
     "ru": "❗ Введите сумму только цифрами",
     "en": "❗ Enter the amount only in numbers"
   },
   "create_job_agree": {
-    "uz": "✅ Ish qo‘shishni tasdiqlash",
+    "uz": "✅ Ish qo'shishni tasdiqlash",
     "ru": "✅ Вакансия успешно создана!",
     "en": "✅ Job successfully created!"
   },
   "create_job_agree_error": {
-    "uz": "❗ Ish qo‘shishni tasdiqlashda xatolik yuz berdi.",
+    "uz": "❗ Ish qo'shishni tasdiqlashda xatolik yuz berdi.",
     "ru": "❗ При создании вакансии произошла ошибка.",
     "en": "❗ An error occurred while creating the job."
   },
@@ -182,7 +187,7 @@
     "en": "📂 Choose a job category"
   },
   "category_error": {
-    "uz": "❗ Ish kategoriyasi noto‘g‘ri. Qaytadan kiriting.",
+    "uz": "❗ Ish kategoriyasi noto'g'ri. Qaytadan kiriting.",
     "ru": "❗ Неверная категория работы. Попробуйте снова.",
     "en": "❗ Invalid job category. Please try again."
   },
@@ -208,8 +213,8 @@
       "Main menu"
     ],
     "uz": [
-      "✅ Qo‘shish",
-      "❌ O‘chirish",
+      "✅ Qo'shish",
+      "❌ O'chirish",
       "Asosiy menyu"
     ]
   },
@@ -244,14 +249,14 @@
     "en": "❗ This category does not exist"
   },
   "category_deleted": {
-    "uz": "✅ Ish kategoriyasi o‘chirildi",
+    "uz": "✅ Ish kategoriyasi o'chirildi",
     "ru": "✅ Категория работы удалена",
     "en": "✅ Job category deleted"
   },
   "del_category": {
     "ru": "Выберите обьект для удаления",
     "en": "Select a object to delete",
-    "uz": "O‘chirish uchun tanlang"
+    "uz": "O'chirish uchun tanlang"
   },
   "choose_vacancy": {
     "ru": "Выберите вакансию",
@@ -261,17 +266,17 @@
   "delete_vacancy": {
     "ru": "Выберите вакансию для удаления",
     "en": "Select a job to delete",
-    "uz": "O‘chirish uchun tanlang"
+    "uz": "O'chirish uchun tanlang"
   },
   "delete_vacancy_success": {
     "ru": "Вакансия успешно удалена",
     "en": "Job successfully deleted",
-    "uz": "Ish muvaffaqiyatli o‘chirildi"
+    "uz": "Ish muvaffaqiyatli o'chirildi"
   },
   "delete_vacancy_error": {
     "ru": "❗ При удалении вакансии произошла ошибка",
     "en": "❗ An error occurred while deleting the job",
-    "uz": "❗ Ish o‘chirishda xatolik yuz berdi"
+    "uz": "❗ Ish o'chirishda xatolik yuz berdi"
   },
   "no_vacancy": {
     "ru": "❗ Нет вакансий",
@@ -281,7 +286,7 @@
   "added_to_favorites": {
     "ru": "✅ Вакансия добавлена в избранное",
     "en": "✅ Job added to favorites",
-    "uz": "✅ Ish favorilarga qo‘shildi"
+    "uz": "✅ Ish favorilarga qo'shildi"
   },
   "already_in_favorites": {
     "ru": "❗ Вакансия уже в избранном",
@@ -296,22 +301,22 @@
   "create_favorites": {
     "ru": "Избранное можно создать в разделе \" 🔍 Найти работу \"",
     "en": "Favorites can be created in the \" 🔍 Find a job\" section",
-    "uz": "Favorilarni \"🔍 Ishni topish\" bo‘limida qo‘shishingiz mumkin"
+    "uz": "Favorilarni \"🔍 Ishni topish\" bo'limida qo'shishingiz mumkin"
   },
   "delete_favorites": {
     "ru": "Выберите избранное для удаления",
     "en": "Select a favorite to delete",
-    "uz": "O‘chirish uchun tanlang"
+    "uz": "O'chirish uchun tanlang"
   },
   "delete_favorite_success": {
     "ru": "Избранное успешно удалено",
     "en": "Favorites successfully deleted",
-    "uz": "Favorilarni muvaffaqiyatli o‘chirildi"
+    "uz": "Favorilarni muvaffaqiyatli o'chirildi"
   },
   "delete_favorite_error": {
     "ru": "❗ При удалении избранного произошла ошибка",
     "en": "❗ An error occurred while deleting favorites",
-    "uz": "❗ Favorilarni o‘chirishda xatolik yuz berdi"
+    "uz": "❗ Favorilarni o'chirishda xatolik yuz berdi"
   },
   "response_sent": {
     "ru": "✅Заявка отправлена",
@@ -334,7 +339,7 @@
     "uz": "Iltimos, kuting"
   },
   "settings_text": {
-    "ru": "Настройки",
+    "ru": "Настройки",
     "en": "Settings",
     "uz": "Sozlamalar"
   },
