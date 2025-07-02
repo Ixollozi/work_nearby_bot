@@ -6,7 +6,7 @@ import random
 
 @bot.callback_query_handler(func=lambda call: call.data in
                                               ['find_job', 'create_job', 'favorite', 'settings', 'my_vacancy',
-                                               'category', 'create', 'delete', 'main_menu', 'user_responses'])
+                                               'category', 'create', 'delete', 'main_menu', 'my_response', 'user_responses'])
 def handle_main_menu(call):
     user_id = call.from_user.id
     try:
@@ -58,10 +58,9 @@ def handle_main_menu(call):
                 user_fav = {'ru': 'Пусто.', 'en': 'Empty.', 'uz': 'Bosh.'}
                 bot.send_message(user_id, user_fav[language], reply_markup=create_or_delete(language, 'favorite'))
 
-
-
         elif call.data == 'settings':
             bot.answer_callback_query(call.id, "Настройки...")
+            bot.send_message(user_id, lang['settings_text'][language], reply_markup=settings_kb(language))
 
         elif call.data == 'my_vacancy':
             bot.answer_callback_query(call.id, "Мои вакансии...")
@@ -98,7 +97,19 @@ def handle_main_menu(call):
                 if not vacancy:
                     bot.send_message(user_id, lang['no_vacancy'][language], reply_markup=main_menu(user_id, language))
                     return
+        elif call.data == 'my_response':
+            bot.answer_callback_query(call.id, "Мои отклики...")
+            responses = get_user_responses(user_id)
+            random.shuffle(responses)
 
+            if not responses:
+                bot.send_message(user_id, lang['no_response'][language], reply_markup=main_menu(user_id, language))
+                return
+            else:
+                bot.send_message(user_id, lang['please_wait'][language])
+                user_responses_list[user_id] = responses
+                user_response_index[user_id] = 0
+                show_current_response(bot, user_id, language)
 
         elif call.data == 'user_responses':
             bot.answer_callback_query(call.id, "Отклики...")

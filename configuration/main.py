@@ -1,7 +1,7 @@
 import logging
 import traceback
 from config import bot
-from handlers import admin, find_job, register, vacancy, menu, favorites
+from handlers import admin, find_job, register, vacancy, menu, favorites, settings
 
 # Настройка детального логирования
 logging.basicConfig(

@@ -35,7 +35,8 @@ except Exception as e:
 delete_expired_vacancies()
 delete_expired_responses()
 # update_user_field(385688612, role='👨‍🔧 соискатель')
-update_user_field(385688612, role='🏢 работодатель')
-update_user_field(385688612, prefered_radius=None)
+# update_user_field(385688612, role='🏢 работодатель')
+# update_user_field(385688612, prefered_radius=None)
+update_user_field(385688612, language='ru')
 
 print("Конфигурация загружена успешно")

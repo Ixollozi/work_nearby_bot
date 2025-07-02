@@ -28,7 +28,7 @@ def create_job_description(message, language, name):
         'description': description,
         'currency': None
     }
-    if len(description) < 200 or len(description) > 1000:
+    if len(description) < 200 or len(description) > 1500:
         bot.send_message(message.chat.id, lang['create_job_description_error'][language])
         bot.register_next_step_handler(message, create_job_description, language, name)
     else:

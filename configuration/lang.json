@@ -127,9 +127,9 @@
     "en": "📄 Please enter a job description"
   },
   "create_job_description_error": {
-    "uz": "❗ Ish tavsifini 200 va 1000 belgidan uzun bo‘lishi kerak.",
-    "ru": "❗ Описание должно быть длиннее 200 и меньше 1000 символов.",
-    "en": "❗ Description must be longer than 200 and shorter than 1000 characters."
+    "uz": "❗ Ish tavsifini 200 va 1500 belgidan uzun bo‘lishi kerak.",
+    "ru": "❗ Описание должно быть длиннее 200 и меньше 1500 символов.",
+    "en": "❗ Description must be longer than 200 and shorter than 1500 characters."
   },
   "choose_currency": {
     "uz": "💰 Valyutani tanlang",
@@ -332,5 +332,63 @@
     "ru": "Пожалуйста, подождите",
     "en": "Please wait",
     "uz": "Iltimos, kuting"
+  },
+  "settings_text": {
+    "ru": "Настройки",
+    "en": "Settings",
+    "uz": "Sozlamalar"
+  },
+  "settings": {
+    "ru": [
+      "🔧 Редактировать профиль",
+      "🌐 Сменить язык",
+      "📍 Изменить радиус поиска",
+      "🔄 Сменить роль",
+      "🔙 Назад"
+    ],
+    "en": [
+      "🔧 Edit profile",
+      "🌐 Change language",
+      "📍 Change search radius",
+      "🔄 Switch role",
+      "🔙 Back"
+    ],
+    "uz": [
+      "🔧 Profilni tahrirlash",
+      "🌐 Tilni o'zgartirish",
+      "📍 Qidiruv radiusini o'zgartirish",
+      "🔄 Rolni o'zgartirish",
+      "🔙 Orqaga"
+    ]
+  },
+  "edit_profile": {
+    "ru": "Выберите, что хотите изменить:",
+    "en": "Select what you want to change:",
+    "uz": "O'zgartirmoqchi bo'lganingizni tanlang:"
+  },
+  "change_language": {
+    "ru": "Выберите язык:",
+    "en": "Select a language:",
+    "uz": "Tilni tanlang:"
+  },
+  "change_radius": {
+    "ru": "Выберите новый радиус поиска:",
+    "en": "Select new search radius:",
+    "uz": "Yangi qidiruv radiusini tanlang:"
+  },
+  "switch_role": {
+    "ru": "Выберите новую роль:",
+    "en": "Select a new role:",
+    "uz": "Yangi rolni tanlang:"
+  },
+  "change_name": {
+    "ru": "Введите новое имя:",
+    "en": "Enter a new name:",
+    "uz": "Yangi ismni kiriting:"
+  },
+  "successfully_changed": {
+    "ru": "✅ Успешно изменено",
+    "en": "✅ Successfully changed",
+    "uz": "✅ Muvaffaqiyatli o'zgartirildi"
   }
 }

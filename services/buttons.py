@@ -12,6 +12,13 @@ def get_language():
                InlineKeyboardButton('English', callback_data='en'))
     return markup
 
+def change_language():
+    markup = InlineKeyboardMarkup()
+    markup.add(InlineKeyboardButton('Uzbek', callback_data='change_uz'),
+               InlineKeyboardButton('Русский', callback_data='change_ru'),
+               InlineKeyboardButton('English', callback_data='change_en'))
+    return markup
+
 def get_phone(language):
     kb = ReplyKeyboardMarkup(resize_keyboard=True)
     phone = KeyboardButton(lang['phone'][language], request_contact=True)
@@ -199,4 +206,17 @@ def navigation():
 
     )
     return nav
+
+
+def settings_kb(language):
+    markup = InlineKeyboardMarkup(row_width=2)
+    edit_profile = InlineKeyboardButton(lang['settings'][language][0], callback_data="edit_profile")
+    change_language = InlineKeyboardButton(lang['settings'][language][1], callback_data="change_language")
+    change_radius = InlineKeyboardButton(lang['settings'][language][2], callback_data="change_radius")
+    switch_role = InlineKeyboardButton(lang['settings'][language][3], callback_data="switch_role")
+    back = InlineKeyboardButton(lang['settings'][language][4], callback_data="main_menu")
+    markup.add(edit_profile, change_language, change_radius, switch_role, back)
+    return markup
+
+
 
