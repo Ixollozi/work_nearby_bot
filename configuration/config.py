@@ -2,12 +2,18 @@ from telebot import TeleBot
 from geopy.geocoders import Nominatim
 from services.service import *
 import logging
+from dotenv import load_dotenv
+import os
 
 # Настройка логирования для отладки
 logging.basicConfig(level=logging.INFO)
 
+load_dotenv()
+BOT_TOKEN = os.getenv("TELEGRAM_BOT_TOKEN")
+
+
 # Глобальные переменные и константы
-bot = TeleBot('7981973749:AAE_3acJdzQTfCMsuH9zi46oXtwS_w6Gj5Q')
+bot = TeleBot(BOT_TOKEN)
 ADMINS = [385688612]
 CATEGORIES = ['Разработка и IT', 'Дизайн', 'Маркетинг', 'Продажи', 'Сопровождение', 'Другое']
 
@@ -34,9 +40,6 @@ except Exception as e:
 
 delete_expired_vacancies()
 delete_expired_responses()
-# update_user_field(385688612, role='👨‍🔧 соискатель')
-# update_user_field(385688612, role='🏢 работодатель')
-# update_user_field(385688612, prefered_radius=None)
-update_user_field(385688612, language='ru')
+
 
 print("Конфигурация загружена успешно")
