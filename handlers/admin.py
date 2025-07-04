@@ -288,6 +288,7 @@ def search_vacancies(query):
             vacancy_by_id = get_vacancy_by_id(int(query))
             return [vacancy_by_id] if vacancy_by_id else []
 
+
         # Search by name (case-insensitive partial match)
         all_vacancies = get_all_vacancies()  # Assumes a function to get all vacancies
         matching_vacancies = [
