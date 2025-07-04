@@ -314,9 +314,9 @@
     "uz": "O'chirish uchun tanlang"
   },
   "delete_favorite_success": {
-    "ru": "Избранное успешно удалено",
-    "en": "Favorites successfully deleted",
-    "uz": "Favorilarni muvaffaqiyatli o'chirildi"
+    "ru": "✅ Избранное успешно удалено",
+    "en": "✅ Favorites successfully deleted",
+    "uz": "✅ Favorilarni muvaffaqiyatli o'chirildi"
   },
   "delete_favorite_error": {
     "ru": "❗ При удалении избранного произошла ошибка",

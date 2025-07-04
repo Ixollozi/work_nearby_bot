@@ -381,9 +381,8 @@ def paginate_items(call):
             if call.data == 'job_prev':
                 user_vacancy_index[user_id] = max(index - 1, 0)
             elif call.data == 'job_next':
-                print(user_vacancy_index[user_id], user_vacancies_list[user_id])
                 user_vacancy_index[user_id] = min(index + 1, len(user_vacancies_list[user_id]) - 1)
-                user_vacancies_list[user_id][user_vacancy_index[user_id]].id
+                # user_vacancies_list[user_id][user_vacancy_index[user_id]].id
             show_current_my_vacancy(bot, user_id, language, call)
 
         elif call.data in ['favorite_prev', 'favorite_next']:
@@ -397,6 +396,7 @@ def paginate_items(call):
                 user_favorite_index[user_id] = max(index - 1, 0)
             elif call.data == 'favorite_next':
                 user_favorite_index[user_id] = min(index + 1, len(user_favorites_list[user_id]) - 1)
+                # user_favorites_list[user_id][user_favorite_index[user_id]].id
             show_current_favorite(bot, user_id, language, call)
 
     except Exception as e:

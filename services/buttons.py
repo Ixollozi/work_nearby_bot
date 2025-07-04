@@ -2,7 +2,8 @@ from telebot import types
 from services.service import *
 from telebot.types import InlineKeyboardMarkup, InlineKeyboardButton, ReplyKeyboardMarkup, KeyboardButton, ReplyKeyboardRemove
 from deep_translator import GoogleTranslator
-from configuration.config import user_vacancy_index, user_vacancies_list
+from configuration.config import (user_vacancy_index, user_vacancies_list, user_favorites_list,
+                                  user_favorite_index, user_responses_list, user_response_index)
 
 
 
@@ -146,17 +147,6 @@ def create_or_delete(language, mode):
     return markup
 
 
-
-def delete_vacancy_keyboard(tg_id):
-    markup = ReplyKeyboardMarkup(resize_keyboard=True)
-    vacancies = get_user_vacancies(tg_id)
-    for vacancy in vacancies:
-        markup.add(KeyboardButton(vacancy.title))
-
-    markup.row('❌ Отменить')
-    return markup
-
-
 def get_vacancy_keyboard(language):
     markup = InlineKeyboardMarkup(row_width=2)
     next_vacancy = InlineKeyboardButton(lang['get_vacancy_kb'][language][0], callback_data="next_vacancy")
@@ -166,36 +156,20 @@ def get_vacancy_keyboard(language):
     markup.add(next_vacancy, favorite, respond, main_menu)
     return markup
 
-def delete_favorite_kb(user_id):
-    favorites_raw = get_favorites(user_id)
-    vacancy_ids = [f.vacancy_id for f in favorites_raw]
-    markup = ReplyKeyboardMarkup(resize_keyboard=True)
-
-    vacancies = []
-    for vid in vacancy_ids:
-        v = get_vacancy_by_id(vid)
-        if v:
-            vacancies.append(v)
-    if vacancies:
-        titles = [v.title for v in vacancies]
-        for title in titles:
-            markup.add(KeyboardButton(title))
-
-    markup.row('❌ Отменить')
-    return markup
 
 
 def navigation(user_id,item_type='response'):
     nav = InlineKeyboardMarkup()
-    vacancy_id = user_vacancies_list[user_id][user_vacancy_index[user_id]].id
     if item_type == 'response':
-        nav.row(
+        response_id = user_responses_list[user_id][user_response_index[user_id]].id
+        nav.add(
             InlineKeyboardButton("⬅️", callback_data="response_prev"),
-            InlineKeyboardButton("❌", callback_data="response_delete"),
+            InlineKeyboardButton("❌", callback_data=f"response_delete_{response_id}"),
             InlineKeyboardButton("➡️", callback_data="response_next")
         )
         nav.row(InlineKeyboardButton("🏠", callback_data="main_menu"))
     elif item_type == 'vacancy':
+        vacancy_id = user_vacancies_list[user_id][user_vacancy_index[user_id]].id
         nav.add(
             InlineKeyboardButton("⬅️", callback_data="job_prev"),
             InlineKeyboardButton("❌", callback_data=f"job_delete_{vacancy_id}"),
@@ -203,8 +177,9 @@ def navigation(user_id,item_type='response'):
         )
         nav.row(InlineKeyboardButton("🏠", callback_data="main_menu"))
     elif item_type == 'favorite':
-        nav.row(InlineKeyboardButton("⬅️", callback_data='favorite_prev'),
-                InlineKeyboardButton("❌", callback_data='favorite_delete'),
+        favorite_id = user_favorites_list[user_id][user_favorite_index[user_id]].id
+        nav.add(InlineKeyboardButton("⬅️", callback_data='favorite_prev'),
+                InlineKeyboardButton(f"❌ ", callback_data=f'favorite_delete_{favorite_id}'),
                 InlineKeyboardButton("➡️", callback_data='favorite_next'))
         nav.row(InlineKeyboardButton("🏠", callback_data="main_menu"))
     return nav
