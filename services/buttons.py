@@ -67,11 +67,14 @@ def main_menu(tg_id,language):
     return markup
 
 def admin_menu():
-    markup = types.ReplyKeyboardMarkup(resize_keyboard=True, row_width=2)
-    markup.add('⭐️ Все админы ⭐️','🗂 Все категории 🗂' ,
-               '⭐️ Добавить админа', '🗂 Добавить категорию',
-               '⭐️ Удалить админа','🗂 Удалить категорию',
-               '📋 Список пользователей', '❌ Выход из админки')
+    markup = types.ReplyKeyboardMarkup(resize_keyboard=True)
+    markup.add('📋 Список пользователей')
+    markup.add('⭐️ Добавить админа','⭐️ Удалить админа')
+    markup.add('⭐️ Все админы ⭐️')
+    markup.add( '🗂 Добавить категорию','🗂 Удалить категорию')
+    markup.add('🗂 Все категории 🗂')
+    markup.add('⚙️ Настройки', '🔍 Найти и удалить вакансию')
+    markup.add('❌ Выход из админки')
     return markup
 
 def cancel():
@@ -197,14 +200,20 @@ def delete_favorite_kb(user_id):
     return markup
 
 
-def navigation():
+def navigation(item_type='response'):
     nav = InlineKeyboardMarkup()
-    nav.row(
-        InlineKeyboardButton("⬅️", callback_data="response_prev"),
-        InlineKeyboardButton("🏠", callback_data="main_menu"),
-        InlineKeyboardButton("➡️", callback_data="response_next")
-
-    )
+    if item_type == 'response':
+        nav.row(
+            InlineKeyboardButton("⬅️", callback_data="response_prev"),
+            InlineKeyboardButton("🏠", callback_data="main_menu"),
+            InlineKeyboardButton("➡️", callback_data="response_next")
+        )
+    elif item_type == 'vacancy':
+        nav.row(
+            InlineKeyboardButton("⬅️", callback_data="job_prev"),
+            InlineKeyboardButton("🏠", callback_data="main_menu"),
+            InlineKeyboardButton("➡️", callback_data="job_next")
+        )
     return nav
 
 

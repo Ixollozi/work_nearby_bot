@@ -1,6 +1,8 @@
 from configuration.config import *
 from configuration.utils import *
 from services.buttons import *
+import os
+import sys
 
 @bot.message_handler(commands=['admin'])
 def admin_panel(message):
@@ -62,6 +64,14 @@ def handle_admin_menu(message):
         bot.send_message(message.chat.id, 'Введите название категории:', reply_markup=cancel())
         bot.register_next_step_handler(message, remove_category)
 
+    elif message.text == '⚙️ Настройки':
+        bot.send_message(message.chat.id, 'Настройки бота:', reply_markup=settings_menu())
+        bot.register_next_step_handler(message, handle_settings)
+
+    elif message.text == '🔍 Найти и удалить вакансию':
+        bot.send_message(message.chat.id, 'Введите ID или название вакансии для поиска:', reply_markup=cancel())
+        bot.register_next_step_handler(message, search_vacancy)
+
     elif message.text == '❌ Выход из админки':
         bot.send_message(message.chat.id, 'Вы вышли из админ-панели.',
                          reply_markup=types.ReplyKeyboardRemove())
@@ -108,6 +118,7 @@ def paginate_users(call):
     bot.delete_message(chat_id, call.message.message_id)
     show_users_page(chat_id, chat_pages[chat_id])
 
+
 @safe_step
 def add_admin_by_phone(message):
     phone = message.text.strip()
@@ -119,17 +130,19 @@ def add_admin_by_phone(message):
         bot.send_message(message.chat.id,
                          'Пожалуйста, введите номер телефона в международном формате, например: +998901234567',
                          reply_markup=cancel())
-
-    user = get_user_by_phone(phone)
-    if user:
-        user.is_admin = True
-        db.commit()
-        bot.send_message(message.chat.id, f'Пользователь {user.name} с номером {phone} назначен админом.',
-                         reply_markup=admin_menu())
-        bot.register_next_step_handler(message, handle_admin_menu)
-    else:
-        bot.send_message(message.chat.id, f'Пользователь с номером {phone} не найден.')
         bot.register_next_step_handler(message, add_admin_by_phone)
+    else:
+        user = get_user_by_phone(phone)
+        if user:
+            user.is_admin = True
+            db.commit()
+            bot.send_message(message.chat.id, f'Пользователь {user.name} с номером {phone} назначен админом.',
+                             reply_markup=admin_menu())
+            bot.register_next_step_handler(message, handle_admin_menu)
+        else:
+            bot.send_message(message.chat.id, f'Пользователь с номером {phone} не найден.')
+            bot.register_next_step_handler(message, add_admin_by_phone)
+
 
 @safe_step
 def remove_admin_by_phone(message):
@@ -140,23 +153,25 @@ def remove_admin_by_phone(message):
         return
     elif not phone.startswith('+'):
         bot.send_message(message.chat.id,
-                         'Пожалуйста, введите номер телефона в международном формате, например: +998901234567')
-
-    user = get_user_by_phone(phone)
-    if user:
-        user.is_admin = False
-        db.commit()
-        bot.send_message(message.chat.id, f'Пользователь {user.name} с номером {phone} удален из админов.',
-                         reply_markup=admin_menu())
-        bot.register_next_step_handler(message, handle_admin_menu)
-    else:
-        bot.send_message(message.chat.id, f'Пользователь с номером {phone} не найден.')
+                         'Пожалуйста, введите номер телефона в международном формате, например: +998901234567',
+                         reply_markup=cancel())
         bot.register_next_step_handler(message, remove_admin_by_phone)
+    else:
+        user = get_user_by_phone(phone)
+        if user:
+            user.is_admin = False
+            db.commit()
+            bot.send_message(message.chat.id, f'Пользователь {user.name} с номером {phone} удален из админов.',
+                             reply_markup=admin_menu())
+            bot.register_next_step_handler(message, handle_admin_menu)
+        else:
+            bot.send_message(message.chat.id, f'Пользователь с номером {phone} не найден.')
+            bot.register_next_step_handler(message, remove_admin_by_phone)
+
 
 @safe_step
 def add_category(message):
     category_name = message.text.strip()
-
     if message.text == '❌ Отменить':
         bot.send_message(message.chat.id, 'Вы в админ-панели.', reply_markup=admin_menu())
         bot.register_next_step_handler(message, handle_admin_menu)
@@ -172,12 +187,14 @@ def add_category(message):
                          reply_markup=admin_menu())
         bot.register_next_step_handler(message, handle_admin_menu)
 
+
 @safe_step
 def remove_category(message):
     category_name = message.text.strip()
     if message.text == '❌ Отменить':
         bot.send_message(message.chat.id, 'Вы в админ-панели.', reply_markup=admin_menu())
         bot.register_next_step_handler(message, handle_admin_menu)
+        return
     elif category_name not in [c.name for c in get_all_categories()]:
         bot.send_message(message.chat.id, 'Категория не существует.', reply_markup=admin_menu())
         bot.register_next_step_handler(message, handle_admin_menu)
@@ -186,3 +203,102 @@ def remove_category(message):
         bot.send_message(message.chat.id, f'Категория "{category_name}" успешно удалена.',
                          reply_markup=admin_menu())
         bot.register_next_step_handler(message, handle_admin_menu)
+
+
+@safe_step
+def handle_settings(message):
+    if message.text == '🔄 Перезапуск бота':
+        bot.send_message(message.chat.id, '♻️ Бот перезапускается...')
+        restart_bot()
+    elif message.text == '⬅️ Назад':
+        bot.send_message(message.chat.id, 'Вы в админ-панели.', reply_markup=admin_menu())
+        bot.register_next_step_handler(message, handle_admin_menu)
+    else:
+        bot.send_message(message.chat.id, 'Выберите команду из меню.', reply_markup=settings_menu())
+        bot.register_next_step_handler(message, handle_settings)
+
+
+
+
+@safe_step
+def search_vacancy(message):
+    if message.text == '❌ Отменить':
+        bot.send_message(message.chat.id, 'Вы в админ-панели.', reply_markup=admin_menu())
+        bot.register_next_step_handler(message, handle_admin_menu)
+        return
+
+    search_query = message.text.strip()
+    vacancies = search_vacancies(search_query)  # Assumes a function to search vacancies by ID or name
+    if not vacancies:
+        bot.send_message(message.chat.id, 'Вакансии не найдены.', reply_markup=admin_menu())
+        bot.register_next_step_handler(message, handle_admin_menu)
+        return
+
+    markup = InlineKeyboardMarkup()
+    for vacancy in vacancies:
+        markup.add(InlineKeyboardButton(f"{vacancy.name} (ID: {vacancy.id})", callback_data=f"vacancy_{vacancy.id}"))
+
+    bot.send_message(message.chat.id, 'Найденные вакансии:', reply_markup=markup)
+    bot.register_next_step_handler(message, search_vacancy)
+
+
+@bot.callback_query_handler(func=lambda call: call.data.startswith('vacancy_'))
+def confirm_delete_vacancy(call):
+    vacancy_id = int(call.data.split('_')[1])
+    vacancy = get_vacancy_by_id(vacancy_id)  # Assumes a function to get vacancy by ID
+    if vacancy:
+        markup = InlineKeyboardMarkup()
+        markup.row(InlineKeyboardButton("Удалить", callback_data=f"delete_vacancy_{vacancy_id}"),
+                   InlineKeyboardButton("Отмена", callback_data="cancel_vacancy"))
+        bot.send_message(call.message.chat.id,
+                         f"Вакансия: {vacancy.name}\nID: {vacancy_id}\nУдалить эту вакансию?",
+                         reply_markup=markup)
+    else:
+        bot.send_message(call.message.chat.id, 'Вакансия не найдена.', reply_markup=admin_menu())
+        bot.register_next_step_handler(call.message, handle_admin_menu)
+
+
+@bot.callback_query_handler(func=lambda call: call.data.startswith('delete_vacancy_') or call.data == 'cancel_vacancy')
+def handle_vacancy_action(call):
+    if call.data == 'cancel_vacancy':
+        bot.delete_message(call.message.chat.id, call.message.message_id)
+        bot.send_message(call.message.chat.id, 'Вы в админ-панели.', reply_markup=admin_menu())
+        bot.register_next_step_handler(call.message, handle_admin_menu)
+        return
+
+    vacancy_id = int(call.data.split('_')[2])
+    delete_vacancy(vacancy_id)  # Assumes a function to delete vacancy by ID
+    db.commit()
+    bot.delete_message(call.message.chat.id, call.message.message_id)
+    bot.send_message(call.message.chat.id, f'Вакансия ID {vacancy_id} удалена.', reply_markup=admin_menu())
+    bot.register_next_step_handler(call.message, handle_admin_menu)
+
+
+def settings_menu():
+    markup = types.ReplyKeyboardMarkup(resize_keyboard=True)
+    markup.add('🔄 Перезапуск бота')
+    markup.add('⬅️ Назад')
+    return markup
+
+
+def search_vacancies(query):
+    try:
+        # Check if query is a number (ID)
+        if query.isdigit():
+            vacancy_by_id = get_vacancy_by_id(int(query))
+            return [vacancy_by_id] if vacancy_by_id else []
+
+        # Search by name (case-insensitive partial match)
+        all_vacancies = get_all_vacancies()  # Assumes a function to get all vacancies
+        matching_vacancies = [
+            vacancy for vacancy in all_vacancies
+            if query.lower() in vacancy.name.lower()
+        ]
+        return matching_vacancies
+    except Exception as e:
+        print(f"[WARN search_vacancies] {e}")
+        return []
+
+def restart_bot():
+    python = sys.executable
+    os.execl(python, python, *sys.argv)

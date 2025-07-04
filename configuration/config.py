@@ -1,6 +1,5 @@
 from telebot import TeleBot
-from geopy.geocoders import Nominatim
-from services.service import *
+import requests
 import logging
 from dotenv import load_dotenv
 import os
@@ -26,20 +25,16 @@ user_responses_list = {}
 user_response_index = {}
 
 # Геолокатор
-geolocator = Nominatim(user_agent="Ishbor_telegram_bot")
 
-# Инициализация категорий
-try:
-    existing_category_names = [c.name for c in get_all_categories()]
-    for i in CATEGORIES:
-        if i not in existing_category_names:
-            create_category(i)
-    print("Категории успешно инициализированы")
-except Exception as e:
-    print(f"Ошибка при инициализации категорий: {e}")
 
-delete_expired_vacancies()
-delete_expired_responses()
+
+def geolocator(lat, lon, language='ru'):
+    key = '628f2653605142aab396a036e804cc96'
+    url = f'https://api.opencagedata.com/geocode/v1/json?q={lat}+{lon}&key={key}&language={language}&pretty=1'
+    response = requests.get(url)
+    data = response.json()
+    return data['results'][0]['formatted'] if data['results'] else None
+
 
 
 print("Конфигурация загружена успешно")

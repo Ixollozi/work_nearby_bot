@@ -43,7 +43,8 @@ def get_user_name(message, language):
 def get_user_role(message, name, language):
     user_id = message.from_user.id
     role = message.text.lower()
-    valid_roles = ['👨‍🔧 arizachi', '🏢 ish beruvchi', '👨‍🔧 соискатель', '🏢 работодатель']
+    print(role)
+    valid_roles = ['👨‍🔧 arizachi', '🏢 ish beruvchi', '👨‍🔧 соискатель', '🏢 работодатель','👨‍🔧 seeker', '🏢 employer']
     if role not in valid_roles:
         bot.send_message(user_id, lang['role_error'][language], reply_markup=get_role_keyboard(language))
         bot.register_next_step_handler(message, get_user_role, name, language)
@@ -56,7 +57,7 @@ def get_user_phone(message, name, role, language):
     user_id = message.from_user.id
     if message.contact:
         phone = message.contact.phone_number
-        if role == '🏢 работодатель' or role == '🏢 ish beruvchi':
+        if role == '🏢 работодатель' or role == '🏢 ish beruvchi' or role == '🏢 employer':
             try:
                 user_name = message.from_user.username
                 create_user(user_id, f'@{user_name}', name, f'+{phone}', language, role = role,

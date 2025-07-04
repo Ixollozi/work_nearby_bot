@@ -334,9 +334,9 @@
     "uz": "❗ Siz allaqachon javob berdingiz"
   },
   "please_wait": {
-    "ru": "Пожалуйста, подождите",
-    "en": "Please wait",
-    "uz": "Iltimos, kuting"
+    "ru": "Пожалуйста, подождите...",
+    "en": "Please wait...",
+    "uz": "Iltimos, kuting..."
   },
   "settings_text": {
     "ru": "Настройки",

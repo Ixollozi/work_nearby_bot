@@ -1,4 +1,4 @@
-from configuration.config import user_create_job_data, geolocator, CATEGORIES
+from configuration.config import user_create_job_data, geolocator
 from configuration.utils import *
 from datetime import timezone
 from services.buttons import *
@@ -99,11 +99,12 @@ def create_job_location(message, language, name, description, currency, payment,
     if message.location:
         latitude = message.location.latitude
         longitude = message.location.longitude
-        print(latitude, longitude)
-        location = geolocator.reverse((latitude, longitude), language=language)
-        print(location)
+        language = get_user(message.from_user.id).language
+        location = geolocator(latitude, longitude, language)
+
         update_user_field(message.from_user.id, latitude=latitude, longitude=longitude)
 
+        bot.send_message(message.chat.id, lang['please_wait'][language])
         bot.send_message(message.chat.id, lang['create_job_category'][language], reply_markup=category_keyboard(language))
         bot.register_next_step_handler(message, create_job_category, language, name, description, currency, payment, contacts, location)
     else:
@@ -113,46 +114,56 @@ def create_job_location(message, language, name, description, currency, payment,
 
 @safe_step
 def create_job_category(message, language, name, description, currency, payment, contacts, location):
-    category = message.text.strip()
-    existing_categories = [c.name.lower() for c in get_all_categories()]
-    predefined_categories = [c.lower() for c in CATEGORIES]
+    user_input = message.text.strip()
+    category_ru = match_category_from_user_input(user_input, language)
+    print(f"[DEBUG] Ввод пользователя: {user_input}")
+    print(f"[DEBUG] Сопоставленная категория (RU): {category_ru}")
 
-    if category.lower() not in predefined_categories and category.lower() not in existing_categories:
+    if not category_ru:
         bot.send_message(message.chat.id, lang['create_job_category_error'][language])
-        bot.register_next_step_handler(message, create_job_category, language, name, description, currency, payment, contacts, location)  # Добавлен параметр location
-    else:
-        if message.from_user.id not in user_create_job_data:
-            user_create_job_data[message.from_user.id] = {}
-        user_create_job_data[message.from_user.id]['category'] = category
+        bot.register_next_step_handler(message, create_job_category, language, name, description, currency, payment, contacts, location)
+        return
 
-        data = user_create_job_data.get(message.from_user.id)
+    # Перевод названия категории обратно в язык пользователя (для отображения)
+    try:
+        category_translated = GoogleTranslator(source='auto', target=language).translate(category_ru)
+    except Exception as e:
+        print(f"[ERROR translate category_ru -> lang] {e}")
+        category_translated = category_ru  # fallback
 
-        text = {
-            'ru': f"Вы уверены, что хотите создать вакансию:\n"
-                  f"📌 Название: {data['name']}\n"
-                  f"📝 Описание:\n {data['description']}\n"
-                  f"💰 Заработная плата: {data['price']}\n"
-                  f"📂 Категория: {data['category']}\n"
-                  f'📍 Местоположение: {location.address}\n'
-                  f"📞 Контакты: {data['contacts']}",
-            'uz': f"Ish vakansiyasini yaratmoqchimisiz:\n"
-                  f"📌 Nomi: {data['name']}\n"
-                  f"📝 Tavsif:\n {data['description']}\n"
-                  f"💰 To'lov: {data['price']}\n"
-                  f"📂 Kategoriya: {data['category']}\n"
-                  f'📍 Manzil: {location.address}\n'
-                  f"📞 Kontaktlar: {data['contacts']}",
-            'en': f"Are you sure you want to create this job posting:\n"
-                  f"📌 Title: {data['name']}\n"
-                  f"📝 Description:\n {data['description']}\n"
-                  f"💰 Salary: {data['price']}\n"
-                  f"📂 Category: {data['category']}\n"
-                  f'📍 Location: {location.address}\n'
-                  f"📞 Contacts: {data['contacts']}"
-        }
+    # Сохраняем категорию на русском
+    if message.from_user.id not in user_create_job_data:
+        user_create_job_data[message.from_user.id] = {}
+    user_create_job_data[message.from_user.id]['category'] = category_ru
 
-        bot.send_message(message.chat.id, text[language], reply_markup=agree(language))
-        bot.register_next_step_handler(message, agree_job, language, name, description, category, payment, contacts)
+    data = user_create_job_data.get(message.from_user.id)
+
+    text = {
+        'ru': f"Вы уверены, что хотите создать вакансию:\n"
+              f"📌 Название: {data['name']}\n"
+              f"📝 Описание:\n {data['description']}\n"
+              f"💰 Заработная плата: {data['price']}\n"
+              f"📂 Категория: {category_translated}\n"
+              f'📍 Местоположение: {location}\n'
+              f"📞 Контакты: {data['contacts']}",
+        'uz': f"Ish vakansiyasini yaratmoqchimisiz:\n"
+              f"📌 Nomi: {data['name']}\n"
+              f"📝 Tavsif:\n {data['description']}\n"
+              f"💰 To'lov: {data['price']}\n"
+              f"📂 Kategoriya: {category_translated}\n"
+              f'📍 Manzil: {location}\n'
+              f"📞 Kontaktlar: {data['contacts']}",
+        'en': f"Are you sure you want to create this job posting:\n"
+              f"📌 Title: {data['name']}\n"
+              f"📝 Description:\n {data['description']}\n"
+              f"💰 Salary: {data['price']}\n"
+              f"📂 Category: {category_translated}\n"
+              f'📍 Location: {location}\n'
+              f"📞 Contacts: {data['contacts']}"
+    }
+
+    bot.send_message(message.chat.id, text[language], reply_markup=agree(language))
+    bot.register_next_step_handler(message, agree_job, language, name, description, category_ru, payment, contacts)
 
 
 @safe_step

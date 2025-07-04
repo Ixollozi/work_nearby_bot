@@ -67,6 +67,7 @@ def handle_role_change(message, user):
     role = message.text.lower()
     valid_roles = [
         '👨‍🔧 соискатель', '🏢 работодатель',
+        '👨‍🔧 seeker', '🏢 employer',
         '👨‍🔧 arizachi', '🏢 ish beruvchi'
     ]
 
