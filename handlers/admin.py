@@ -6,6 +6,7 @@ import sys
 
 @bot.message_handler(commands=['admin'])
 def admin_panel(message):
+    user_state[message.from_user.id] = 'awaiting_admin'
     user_id = message.from_user.id
     try:
         admin_user = get_admin(user_id)
@@ -22,6 +23,7 @@ def admin_panel(message):
 
 @safe_step
 def handle_admin_menu(message):
+    user_state[message.from_user.id] = 'awaiting_admin_menu'
     if message.text == '📋 Список пользователей':
         chat_id = message.chat.id
         chat_pages[chat_id] = 1
@@ -73,8 +75,10 @@ def handle_admin_menu(message):
         bot.register_next_step_handler(message, search_vacancy)
 
     elif message.text == '❌ Выход из админки':
+        user = get_user(message.from_user.id)
         bot.send_message(message.chat.id, 'Вы вышли из админ-панели.',
                          reply_markup=types.ReplyKeyboardRemove())
+        bot.send_message(message.chat.id, 'MENU: ', reply_markup=main_menu(message.from_user.id, user.language))
 
     else:
         bot.send_message(message.chat.id, 'Выберите команду из меню.')
@@ -107,6 +111,7 @@ def show_users_page(chat_id, page):
 
 @bot.callback_query_handler(func=lambda call: call.data in ['next_users', 'prev_users'])
 def paginate_users(call):
+    user_state[call.from_user.id] = 'awaiting_admin_menu_paginate_users'
     chat_id = call.message.chat.id
     current_page = chat_pages.get(chat_id, 1)
 
@@ -121,6 +126,7 @@ def paginate_users(call):
 
 @safe_step
 def add_admin_by_phone(message):
+    user_state[message.from_user.id] = 'awaiting_admin_menu_add_admin_by_phone'
     phone = message.text.strip()
     if message.text == '❌ Отменить':
         bot.send_message(message.chat.id, 'Вы в админ-панели.', reply_markup=admin_menu())
@@ -146,6 +152,7 @@ def add_admin_by_phone(message):
 
 @safe_step
 def remove_admin_by_phone(message):
+    user_state[message.from_user.id] = 'awaiting_admin_menu_remove_admin_by_phone'
     phone = message.text.strip()
     if message.text == '❌ Отменить':
         bot.send_message(message.chat.id, 'Вы в админ-панели.', reply_markup=admin_menu())
@@ -171,6 +178,7 @@ def remove_admin_by_phone(message):
 
 @safe_step
 def add_category(message):
+    user_state[message.from_user.id] = 'awaiting_admin_menu_add_category'
     category_name = message.text.strip()
     if message.text == '❌ Отменить':
         bot.send_message(message.chat.id, 'Вы в админ-панели.', reply_markup=admin_menu())
@@ -190,6 +198,7 @@ def add_category(message):
 
 @safe_step
 def remove_category(message):
+    user_state[message.from_user.id] = 'awaiting_admin_menu_remove_category'
     category_name = message.text.strip()
     if message.text == '❌ Отменить':
         bot.send_message(message.chat.id, 'Вы в админ-панели.', reply_markup=admin_menu())
@@ -207,6 +216,7 @@ def remove_category(message):
 
 @safe_step
 def handle_settings(message):
+    user_state[message.from_user.id] = 'awaiting_admin_menu_settings'
     if message.text == '🔄 Перезапуск бота':
         bot.send_message(message.chat.id, '♻️ Бот перезапускается...')
         restart_bot()
@@ -222,6 +232,7 @@ def handle_settings(message):
 
 @safe_step
 def search_vacancy(message):
+    user_state[message.from_user.id] = 'awaiting_admin_menu_search_vacancy'
     if message.text == '❌ Отменить':
         bot.send_message(message.chat.id, 'Вы в админ-панели.', reply_markup=admin_menu())
         bot.register_next_step_handler(message, handle_admin_menu)
@@ -236,7 +247,7 @@ def search_vacancy(message):
 
     markup = InlineKeyboardMarkup()
     for vacancy in vacancies:
-        markup.add(InlineKeyboardButton(f"{vacancy.name} (ID: {vacancy.id})", callback_data=f"vacancy_{vacancy.id}"))
+        markup.add(InlineKeyboardButton(f"{vacancy.title} (ID: {vacancy.id})", callback_data=f"vacancy_{vacancy.id}"))
 
     bot.send_message(message.chat.id, 'Найденные вакансии:', reply_markup=markup)
     bot.register_next_step_handler(message, search_vacancy)
@@ -244,14 +255,15 @@ def search_vacancy(message):
 
 @bot.callback_query_handler(func=lambda call: call.data.startswith('vacancy_'))
 def confirm_delete_vacancy(call):
+    user_state[call.from_user.id] = 'awaiting_admin_menu_confirm_delete_vacancy'
     vacancy_id = int(call.data.split('_')[1])
-    vacancy = get_vacancy_by_id(vacancy_id)  # Assumes a function to get vacancy by ID
+    vacancy = get_vacancy_by_id(vacancy_id)
     if vacancy:
         markup = InlineKeyboardMarkup()
         markup.row(InlineKeyboardButton("Удалить", callback_data=f"delete_vacancy_{vacancy_id}"),
                    InlineKeyboardButton("Отмена", callback_data="cancel_vacancy"))
         bot.send_message(call.message.chat.id,
-                         f"Вакансия: {vacancy.name}\nID: {vacancy_id}\nУдалить эту вакансию?",
+                         f"Вакансия: {vacancy.title}\nID: {vacancy_id}\nУдалить эту вакансию?",
                          reply_markup=markup)
     else:
         bot.send_message(call.message.chat.id, 'Вакансия не найдена.', reply_markup=admin_menu())
@@ -260,6 +272,7 @@ def confirm_delete_vacancy(call):
 
 @bot.callback_query_handler(func=lambda call: call.data.startswith('delete_vacancy_') or call.data == 'cancel_vacancy')
 def handle_vacancy_action(call):
+    user_state[call.from_user.id] = 'awaiting_admin_menu_handle_vacancy_action'
     if call.data == 'cancel_vacancy':
         bot.delete_message(call.message.chat.id, call.message.message_id)
         bot.send_message(call.message.chat.id, 'Вы в админ-панели.', reply_markup=admin_menu())
@@ -267,7 +280,7 @@ def handle_vacancy_action(call):
         return
 
     vacancy_id = int(call.data.split('_')[2])
-    delete_vacancy(vacancy_id)  # Assumes a function to delete vacancy by ID
+    delete_vacancy_by_admin(vacancy_id)  # Assumes a function to delete vacancy by ID
     db.commit()
     bot.delete_message(call.message.chat.id, call.message.message_id)
     bot.send_message(call.message.chat.id, f'Вакансия ID {vacancy_id} удалена.', reply_markup=admin_menu())
@@ -283,22 +296,22 @@ def settings_menu():
 
 def search_vacancies(query):
     try:
-        # Check if query is a number (ID)
+        # Поиск по ID
         if query.isdigit():
             vacancy_by_id = get_vacancy_by_id(int(query))
             return [vacancy_by_id] if vacancy_by_id else []
 
-
-        # Search by name (case-insensitive partial match)
-        all_vacancies = get_all_vacancies()  # Assumes a function to get all vacancies
+        # Поиск по названию (частичное совпадение, без учёта регистра)
+        all_vacancies = get_all_vacancies()
         matching_vacancies = [
             vacancy for vacancy in all_vacancies
-            if query.lower() in vacancy.name.lower()
+            if query.lower() in vacancy.title.lower()
         ]
         return matching_vacancies
     except Exception as e:
         print(f"[WARN search_vacancies] {e}")
         return []
+
 
 def restart_bot():
     python = sys.executable

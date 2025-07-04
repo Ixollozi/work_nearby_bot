@@ -1,4 +1,4 @@
-from configuration.config import user_vacancy_index, user_vacancies_list
+from configuration.config import user_vacancy_index, user_vacancies_list, user_state
 from configuration.utils import *
 from services.buttons import *
 from deep_translator import GoogleTranslator
@@ -39,6 +39,7 @@ def show_current_vacancy(bot, user_id, language):
 
 @bot.callback_query_handler(func=lambda call: call.data in ['next_vacancy', 'add_to_favorite', 'respond'])
 def handle_vacancy_actions(call):
+    user_state[call.from_user.id] = 'awaiting_vacancy_actions'
     user_id = call.from_user.id
     user = get_user(user_id)
     language = user.language
@@ -70,6 +71,7 @@ def handle_vacancy_actions(call):
 
 @safe_step
 def choose_category(message, language, mode):
+    user_state[message.from_user.id] = 'awaiting_choose_category'
     user_input = message.text.strip()
 
     if user_input == '❌ Отменить':
@@ -101,15 +103,19 @@ def choose_category(message, language, mode):
     if mode == 'add':
         if category_obj.name in user_category_names:
             bot.send_message(message.chat.id, lang['category_exists'][language], reply_markup=category_keyboard(language))
+            bot.register_next_step_handler(message, lambda msg: choose_category(msg, language, mode))
         else:
             add_user_category(user_id=message.from_user.id, category_id=category_id)
-            bot.send_message(message.chat.id, lang['category_selected'][language], reply_markup=main_menu(message.from_user.id, language))
+            bot.send_message(message.chat.id, lang['category_selected'][language], reply_markup=ReplyKeyboardRemove())
+            bot.send_message(message.chat.id, 'MENU', reply_markup=main_menu(message.from_user.id, language))
 
     elif mode == 'delete':
         if category_obj.name not in user_category_names:
             bot.send_message(message.chat.id, lang['category_not_exists'][language], reply_markup=category_keyboard(language))
+            bot.register_next_step_handler(message, lambda msg: choose_category(msg, language, mode))
         else:
             delete_user_category(user_id=message.from_user.id, category_id=category_id)
-            bot.send_message(message.chat.id, lang['category_deleted'][language], reply_markup=main_menu(message.from_user.id, language))
+            bot.send_message(message.chat.id, lang['category_deleted'][language], reply_markup=ReplyKeyboardRemove())
+            bot.send_message(message.chat.id, 'MENU', reply_markup=main_menu(message.from_user.id, language))
     else:
         bot.send_message(message.chat.id, lang['category_error'][language], reply_markup=main_menu(message.from_user.id, language))

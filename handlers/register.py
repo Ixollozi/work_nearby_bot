@@ -1,9 +1,12 @@
 from services.buttons import *
 from configuration.utils import *
 from services.service import *
+from configuration.config import user_state
+
 
 @bot.message_handler(commands=['start'])
 def start(message):
+    user_state.pop(message.from_user.id, None)
     user_id = message.from_user.id
     try:
         user = get_user(user_id)
@@ -18,6 +21,7 @@ def start(message):
 
 @bot.callback_query_handler(func=lambda call: call.data in ['uz', 'ru', 'en'])
 def hello(call):
+    user_state[call.from_user.id] = 'awaiting_lang'
     user_id = call.from_user.id
     try:
         language = call.data
@@ -30,6 +34,7 @@ def hello(call):
 
 @safe_step
 def get_user_name(message, language):
+    user_state[message.from_user.id] = 'awaiting_name'
     user_id = message.from_user.id
     if message.text.isdigit():
         bot.send_message(user_id, lang['digit'][language])
@@ -41,6 +46,7 @@ def get_user_name(message, language):
 
 @safe_step
 def get_user_role(message, name, language):
+    user_state[message.from_user.id] = 'awaiting_role'
     user_id = message.from_user.id
     role = message.text.lower()
     print(role)
@@ -54,6 +60,7 @@ def get_user_role(message, name, language):
 
 @safe_step
 def get_user_phone(message, name, role, language):
+    user_state[message.from_user.id] = 'awaiting_phone'
     user_id = message.from_user.id
     if message.contact:
         phone = message.contact.phone_number
@@ -82,6 +89,7 @@ def get_user_phone(message, name, role, language):
         bot.register_next_step_handler(message, get_user_phone, name, role, language)
 @safe_step
 def get_user_location(message, name, role, phone, language):
+    user_state[message.from_user.id] = 'awaiting_location'
     user_id = message.from_user.id
     if message.location:
         latitude = message.location.latitude
@@ -94,6 +102,7 @@ def get_user_location(message, name, role, phone, language):
 
 @safe_step
 def get_user_radius(message, name, role, phone, latitude, longitude, language):
+    user_state[message.from_user.id] = 'awaiting_radius'
     user_id = message.from_user.id
     prefered_radius = {'1000m': 1000, '5000m': 5000, '10000m': 10000, lang['all_vacancies'][language]: None}
     text = message.text

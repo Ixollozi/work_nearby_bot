@@ -239,14 +239,14 @@
     ]
   },
   "category_exists": {
-    "uz": "❗ Bu kategoriya allaqachon mavjud",
-    "ru": "❗ Эта категория уже существует",
-    "en": "❗ This category already exists"
+    "uz": "❗ Bu kategoriya allaqachon mavjud, qaytadan urinib ko'ring",
+    "ru": "❗ Эта категория уже существует, попробуйте ещё раз",
+    "en": "❗ This category already exists, please try again"
   },
   "category_not_exists": {
-    "uz": "❗ Bu kategoriya mavjud emas",
-    "ru": "❗ Эта категория не существует",
-    "en": "❗ This category does not exist"
+    "uz": "❗ Bu kategoriya mavjud emas, qaytadan urinib ko'ring",
+    "ru": "❗ Эта категория не существует, попробуйте ещё раз",
+    "en": "❗ This category does not exist, please try again"
   },
   "category_deleted": {
     "uz": "✅ Ish kategoriyasi o'chirildi",
@@ -267,6 +267,11 @@
     "ru": "Выберите вакансию для удаления",
     "en": "Select a job to delete",
     "uz": "O'chirish uchun tanlang"
+  },
+  "delete_vacancy_agree": {
+    "ru": "Вы уверены, что хотите удалить вакансию?",
+    "en": "Are you sure you want to delete the job?",
+    "uz": "Ishni o'chirishni hohlaysizmi?"
   },
   "delete_vacancy_success": {
     "ru": "Вакансия успешно удалена",

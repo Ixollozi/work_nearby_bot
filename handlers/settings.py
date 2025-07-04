@@ -7,6 +7,7 @@ from services.service import *
     'change_uz', 'change_ru', 'change_en'
 ])
 def unified_settings_handler(call):
+    user_state[call.from_user.id] = 'awaiting_unified_settings_handler'
     user_id = call.from_user.id
     user = get_user(user_id)
     data = call.data
@@ -25,7 +26,8 @@ def unified_settings_handler(call):
         new_lang = language_map[data]
         update_user_field(user_id, language=new_lang)
         bot.answer_callback_query(call.id, text=lang['successfully_changed'][new_lang])
-        bot.send_message(user_id, lang['successfully_changed'][new_lang], reply_markup=main_menu(user_id, new_lang))
+        bot.send_message(user_id, lang['successfully_changed'][new_lang], reply_markup=ReplyKeyboardRemove())
+        bot.send_message(user_id, 'MENU', reply_markup=main_menu(user_id, new_lang))
         return
 
     # Смена радиуса
@@ -47,6 +49,7 @@ def unified_settings_handler(call):
 
 
 def handle_radius_change(message, user):
+    user_state[message.from_user.id] = 'awaiting_radius_change'
     text = message.text
     radius_map = {
         '1000m': 1000,
@@ -64,6 +67,7 @@ def handle_radius_change(message, user):
 
 
 def handle_role_change(message, user):
+    user_state[message.from_user.id] = 'awaiting_role_change'
     role = message.text.lower()
     valid_roles = [
         '👨‍🔧 соискатель', '🏢 работодатель',
@@ -81,6 +85,7 @@ def handle_role_change(message, user):
 
 @safe_step
 def get_user_name_edit(message, language):
+    user_state[message.from_user.id] = 'awaiting_user_name_edit'
     user_id = message.from_user.id
     if message.text.isdigit():
         bot.send_message(user_id, lang['digit'][language])
@@ -92,6 +97,7 @@ def get_user_name_edit(message, language):
 
 @safe_step
 def get_user_role_edit(message, name, language):
+    user_state[message.from_user.id] = 'awaiting_user_role_edit'
     user_id = message.from_user.id
     role = message.text.lower()
     valid_roles = ['👨‍🔧 arizachi', '🏢 ish beruvchi', '👨‍🔧 соискатель', '🏢 работодатель']
@@ -104,6 +110,7 @@ def get_user_role_edit(message, name, language):
 
 @safe_step
 def get_user_phone_edit(message, name, role, language):
+    user_state[message.from_user.id] = 'awaiting_user_phone_edit'
     user_id = message.from_user.id
     if message.contact:
         phone = message.contact.phone_number
@@ -134,6 +141,7 @@ def get_user_phone_edit(message, name, role, language):
 
 @safe_step
 def get_user_location_edit(message, name, role, phone, language):
+    user_state[message.from_user.id] = 'awaiting_user_location_edit'
     user_id = message.from_user.id
     if message.location:
         latitude = message.location.latitude
@@ -146,6 +154,7 @@ def get_user_location_edit(message, name, role, phone, language):
 
 @safe_step
 def get_user_radius_edit(message, name, role, phone, latitude, longitude, language):
+    user_state[message.from_user.id] = 'awaiting_user_radius_edit'
     user_id = message.from_user.id
     prefered_radius = {'1000m': 1000, '5000m': 5000, '10000m': 10000, lang['all_vacancies'][language]: None}
     text = message.text

@@ -1,7 +1,7 @@
 from handlers.find_job import *
 from handlers.vacancy import create_job_name
-from configuration.config import user_responses_list, user_response_index, geolocator, user_vacancies_list, user_vacancy_index
-from telebot.types import InlineKeyboardMarkup, InlineKeyboardButton
+from configuration.config import (user_responses_list, user_response_index, geolocator,
+                                    user_vacancies_list, user_vacancy_index, user_favorites_list,user_favorite_index, user_state)
 import random
 from deep_translator import GoogleTranslator
 
@@ -11,6 +11,7 @@ from deep_translator import GoogleTranslator
                                                'category', 'create', 'delete', 'main_menu', 'my_response',
                                                'user_responses', 'vacancy_prev', 'vacancy_next'])
 def handle_main_menu(call):
+    user_state[call.from_user.id] = 'awaiting_handle_main_menu'
     user_id = call.from_user.id
     user = get_user(user_id)
     language = user.language if user else 'ru'
@@ -44,23 +45,22 @@ def handle_main_menu(call):
             bot.register_next_step_handler_by_chat_id(user_id, create_job_name, language)
 
         elif call.data == 'favorite':
-            bot.answer_callback_query(call.id, "Избранные...")
+            # bot.answer_callback_query(call.id, lang['favorite'][language])
             favorites_raw = get_favorites(user_id)
             vacancies = [get_vacancy_by_id(f.vacancy_id) for f in favorites_raw]
-            vacancies = [v for v in vacancies if v]
-
-            if vacancies:
-                titles = [v.title for v in vacancies]
+            vacancies = [v for v in vacancies if v]  # Фильтруем None
+            if not vacancies:
                 user_fav = {
-                    'ru': 'Ваши избранные:\n' + '\n'.join(titles),
-                    'en': 'Your favorites:\n' + '\n'.join(titles),
-                    'uz': 'Sizning tanlanganlaringiz:\n' + '\n'.join(titles)
+                    'ru': 'Пусто.',
+                    'en': 'Empty.',
+                    'uz': 'Bosh.'
                 }
-                bot.send_message(user_id, user_fav[language], reply_markup=create_or_delete(language, 'favorite'))
-            else:
-                user_fav = {'ru': 'Пусто.', 'en': 'Empty.', 'uz': 'Bosh.'}
-                bot.send_message(user_id, user_fav[language], reply_markup=create_or_delete(language, 'favorite'))
-
+                bot.send_message(user_id, user_fav[language], reply_markup=main_menu(user_id, language))
+                return
+            bot.send_message(user_id, lang['please_wait'][language])
+            user_favorites_list[user_id] = vacancies
+            user_favorite_index[user_id] = 0
+            show_current_favorite(bot, user_id, language)
         elif call.data == 'settings':
             bot.answer_callback_query(call.id, "Настройки...")
             bot.send_message(user_id, lang['settings_text'][language], reply_markup=settings_kb(language))
@@ -135,11 +135,13 @@ def handle_main_menu(call):
 
         elif call.data == 'create':
             bot.answer_callback_query(call.id, "Добавление...")
+            bot.send_message(user_id, lang['please_wait'][language])
             bot.send_message(user_id, lang['choose_category'][language], reply_markup=category_keyboard(language))
             bot.register_next_step_handler_by_chat_id(user_id, lambda msg: choose_category(msg, language, 'add'))
 
         elif call.data == 'delete':
             bot.answer_callback_query(call.id, "Удаление...")
+            bot.send_message(user_id, lang['please_wait'][language])
             bot.send_message(user_id, lang['del_category'][language], reply_markup=category_keyboard(language))
             bot.register_next_step_handler_by_chat_id(user_id, lambda msg: choose_category(msg, language, 'delete'))
 
@@ -202,7 +204,7 @@ def show_current_response(bot, user_id, language, call=None):
               f"📄 Javob {index + 1} dan {len(responses)}"
     }
 
-    markup = navigation(item_type='response')
+    markup = navigation(user_id,item_type='response')
 
     try:
         if call:
@@ -265,7 +267,7 @@ def show_current_my_vacancy(bot, user_id, language, call=None):
               f"📄 Vakansiya {index + 1} dan {len(vacancies)}"
     }
 
-    markup = navigation(item_type='vacancy')
+    markup = navigation(user_id,item_type='vacancy')
 
     try:
         if call:
@@ -281,10 +283,77 @@ def show_current_my_vacancy(bot, user_id, language, call=None):
         print(f"[ERROR show_current_my_vacancy] user_id: {user_id}, error: {e}")
         bot.send_message(user_id, text[language], reply_markup=markup)
 
+def show_current_favorite(bot, user_id, language, call=None):
+    """
+    Отображает текущую избранную вакансию пользователя с пагинацией.
+    """
+    favorites = user_favorites_list.get(user_id, [])
+    index = user_favorite_index.get(user_id, 0)
+
+    if not favorites:
+        bot.send_message(user_id, lang['no_favorites'][language], reply_markup=main_menu(user_id, language))
+        return
+
+    if index < 0 or index >= len(favorites):
+        index = 0
+        user_favorite_index[user_id] = 0
+
+    vacancy = favorites[index]
+
+    try:
+        translated_category = GoogleTranslator(source='ru', target=language).translate(vacancy.category)
+    except Exception as e:
+        print(f"[ERROR translate category] user_id: {user_id}, error: {e}")
+        translated_category = vacancy.category  # fallback
+
+    text = {
+        'ru': f" ИЗБРАННАЯ ВАКАНСИЯ\n\n"
+              f"📌 {vacancy.title}\n\n"
+              f"📝 {vacancy.description}\n\n"
+              f"💰 {vacancy.payment}\n"
+              f"📂 Категория: {translated_category}\n"
+              f"📍 Местоположение: {geolocator(vacancy.latitude, vacancy.longitude, language)}\n"
+              f"📅 Создано: {vacancy.created_at.strftime('%d.%m.%Y %H:%M')}\n\n"
+              f"📄 Избранная вакансия {index + 1} из {len(favorites)}",
+        'en': f" FAVORITE VACANCY\n\n"
+              f"📌 {vacancy.title}\n\n"
+              f"📝 {vacancy.description}\n\n"
+              f"💰 {vacancy.payment}\n"
+              f"📂 Category: {translated_category}\n"
+              f"📍 Location: {geolocator(vacancy.latitude, vacancy.longitude, language)}\n"
+              f"📅 Created: {vacancy.created_at.strftime('%d.%m.%Y %H:%M')}\n\n"
+              f"📄 Favorite vacancy {index + 1} of {len(favorites)}",
+        'uz': f" FAVORIT VAKANSIYA\n\n"
+              f"📌 {vacancy.title}\n\n"
+              f"📝 {vacancy.description}\n\n"
+              f"💰 {vacancy.payment}\n"
+              f"📂 Kategoriya: {translated_category}\n"
+              f"📍 Manzil: {geolocator(vacancy.latitude, vacancy.longitude, language)}\n"
+              f"📅 Yaratilgan: {vacancy.created_at.strftime('%d.%m.%Y %H:%M')}\n\n"
+              f"📄 Tanlangan vakansiya {index + 1} dan {len(favorites)}"
+    }
+
+    markup = navigation(user_id,item_type='favorite')
+
+    try:
+        if call:
+            bot.edit_message_text(
+                chat_id=call.message.chat.id,
+                message_id=call.message.message_id,
+                text=text[language],
+                reply_markup=markup
+            )
+        else:
+            bot.send_message(user_id, text[language], reply_markup=markup)
+    except Exception as e:
+        print(f"[ERROR show_current_favorite] user_id: {user_id}, error: {e}")
+        bot.send_message(user_id, text[language], reply_markup=markup)
+
 
 @bot.callback_query_handler(
-    func=lambda call: call.data in ['response_prev', 'response_next', 'job_prev', 'job_next'])
+    func=lambda call: call.data in ['response_prev', 'response_next', 'job_prev', 'job_next', 'favorite_prev', 'favorite_next'])
 def paginate_items(call):
+    user_state[call.from_user.id] = 'awaiting_menu_paginate_items'
     user_id = call.from_user.id
     user = get_user(user_id)
     language = user.language if user else 'ru'
@@ -312,8 +381,23 @@ def paginate_items(call):
             if call.data == 'job_prev':
                 user_vacancy_index[user_id] = max(index - 1, 0)
             elif call.data == 'job_next':
+                print(user_vacancy_index[user_id], user_vacancies_list[user_id])
                 user_vacancy_index[user_id] = min(index + 1, len(user_vacancies_list[user_id]) - 1)
+                user_vacancies_list[user_id][user_vacancy_index[user_id]].id
             show_current_my_vacancy(bot, user_id, language, call)
+
+        elif call.data in ['favorite_prev', 'favorite_next']:
+            if user_id not in user_favorites_list or not user_favorites_list[user_id]:
+                bot.answer_callback_query(call.id, lang['no_favorites'][language])
+                bot.send_message(user_id, lang['no_favorites'][language], reply_markup=main_menu(user_id, language))
+                return
+
+            index = user_favorite_index.get(user_id, 0)
+            if call.data == 'favorite_prev':
+                user_favorite_index[user_id] = max(index - 1, 0)
+            elif call.data == 'favorite_next':
+                user_favorite_index[user_id] = min(index + 1, len(user_favorites_list[user_id]) - 1)
+            show_current_favorite(bot, user_id, language, call)
 
     except Exception as e:
         print(f"[ERROR paginate_items] user_id: {user_id}, error: {e}")

@@ -17,12 +17,15 @@ ADMINS = [385688612]
 CATEGORIES = ['Разработка и IT', 'Дизайн', 'Маркетинг', 'Продажи', 'Сопровождение', 'Другое']
 
 # Словари для хранения состояний
+user_state = {}
 chat_pages = {}
 user_create_job_data = {}
 user_vacancy_index = {}
 user_vacancies_list = {}
 user_responses_list = {}
 user_response_index = {}
+user_favorites_list = {}
+user_favorite_index = {}
 
 # Геолокатор
 

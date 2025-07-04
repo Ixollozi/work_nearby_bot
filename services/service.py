@@ -244,11 +244,25 @@ def match_category_from_user_input(user_input, user_language):
 
     return None
 
+def delete_vacancy(vacancy_id, user_id):
+    try:
+        vacancy = db.query(Vacancy).filter(Vacancy.id == vacancy_id).first()
+        if not vacancy:
+            return False
+
+        if vacancy.user_id != user_id:
+            return False
+
+        db.delete(vacancy)
+        db.commit()
+        return True
+    except Exception as e:
+        print(f"Error deleting vacancy: {e}")
+        db.rollback()
+        return False
 
 
-
-def delete_vacancy(vacancy_id):
-    """Удалить вакансию по ID"""
+def delete_vacancy_by_admin(vacancy_id):
     try:
         # Сначала удаляем связанные записи
         db.query(Response).filter(Response.vacancy_id == vacancy_id).delete()

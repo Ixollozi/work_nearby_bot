@@ -2,6 +2,7 @@ from telebot import types
 from services.service import *
 from telebot.types import InlineKeyboardMarkup, InlineKeyboardButton, ReplyKeyboardMarkup, KeyboardButton, ReplyKeyboardRemove
 from deep_translator import GoogleTranslator
+from configuration.config import user_vacancy_index, user_vacancies_list
 
 
 
@@ -85,7 +86,9 @@ def cancel():
 def agree(language):
     markup = types.ReplyKeyboardMarkup(resize_keyboard=True)
     if language == 'uz':
-        markup.add('❌ Отменить','✅ Qabul qilish')
+        markup.add('❌ Bekor qilish','✅ Qabul qilish')
+    elif language == 'en':
+        markup.add('❌ Cancel','✅ Agree')
     else:
         markup.add('❌ Отменить','✅ Подтвердить')
     return markup
@@ -99,13 +102,6 @@ def get_currency_keyboard():
     )
     return markup
 
-
-def get_categories_keyboard(language):
-    markup = InlineKeyboardMarkup()
-    categories = get_all_categories()
-    for category in categories:
-        markup.row(InlineKeyboardButton(category.name, callback_data=f"category_{category.name}"))
-    return markup
 
 def category_keyboard(language):
     markup = ReplyKeyboardMarkup(resize_keyboard=True)
@@ -123,7 +119,7 @@ def category_keyboard(language):
             print(f"[ERROR translate_category] {e}")
             translated = category.name
         markup.add(KeyboardButton(translated))
-
+    markup.add(KeyboardButton('❌ Отменить'))
     return markup
 
 def create_or_delete(language, mode):
@@ -150,17 +146,6 @@ def create_or_delete(language, mode):
     return markup
 
 
-def vacancy_keyboard(tg_id,language):
-    markup = ReplyKeyboardMarkup(resize_keyboard=True)
-    vacancies = get_user_vacancies(tg_id)
-    for vacancy in vacancies:
-        try:
-            translated = GoogleTranslator(source='auto', target=language).translate(vacancy.title)
-        except Exception as e:
-            print(f"[ERROR translate_vacancy] {e}")
-            translated = vacancy.name
-        markup.add(KeyboardButton(translated))
-    return markup
 
 def delete_vacancy_keyboard(tg_id):
     markup = ReplyKeyboardMarkup(resize_keyboard=True)
@@ -200,20 +185,28 @@ def delete_favorite_kb(user_id):
     return markup
 
 
-def navigation(item_type='response'):
+def navigation(user_id,item_type='response'):
     nav = InlineKeyboardMarkup()
+    vacancy_id = user_vacancies_list[user_id][user_vacancy_index[user_id]].id
     if item_type == 'response':
         nav.row(
             InlineKeyboardButton("⬅️", callback_data="response_prev"),
-            InlineKeyboardButton("🏠", callback_data="main_menu"),
+            InlineKeyboardButton("❌", callback_data="response_delete"),
             InlineKeyboardButton("➡️", callback_data="response_next")
         )
+        nav.row(InlineKeyboardButton("🏠", callback_data="main_menu"))
     elif item_type == 'vacancy':
-        nav.row(
+        nav.add(
             InlineKeyboardButton("⬅️", callback_data="job_prev"),
-            InlineKeyboardButton("🏠", callback_data="main_menu"),
+            InlineKeyboardButton("❌", callback_data=f"job_delete_{vacancy_id}"),
             InlineKeyboardButton("➡️", callback_data="job_next")
         )
+        nav.row(InlineKeyboardButton("🏠", callback_data="main_menu"))
+    elif item_type == 'favorite':
+        nav.row(InlineKeyboardButton("⬅️", callback_data='favorite_prev'),
+                InlineKeyboardButton("❌", callback_data='favorite_delete'),
+                InlineKeyboardButton("➡️", callback_data='favorite_next'))
+        nav.row(InlineKeyboardButton("🏠", callback_data="main_menu"))
     return nav
 
 

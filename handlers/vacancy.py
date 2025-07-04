@@ -2,10 +2,12 @@ from configuration.config import user_create_job_data, geolocator
 from configuration.utils import *
 from datetime import timezone
 from services.buttons import *
+from configuration.config import user_state
 
 
 @safe_step
 def create_job_name(message, language):
+    user_state[message.from_user.id] = 'awaiting_create_job_name'
     if message.text.isdigit():
         bot.send_message(message.chat.id, lang['create_job_name_error'][language])
         bot.register_next_step_handler(message, create_job_name, language)
@@ -21,6 +23,7 @@ def create_job_name(message, language):
 
 @safe_step
 def create_job_description(message, language, name):
+    user_state[message.from_user.id] = 'awaiting_create_job_description'
     description = message.text
     user_create_job_data[message.from_user.id] = {
         'language': language,
@@ -38,6 +41,7 @@ def create_job_description(message, language, name):
 
 @bot.callback_query_handler(func=lambda call: call.data.startswith('currency_'))
 def handle_currency_selection(call):
+    user_state[call.from_user.id] = 'awaiting_currency_selection'
     try:
         user_id = call.from_user.id
         currency = call.data.replace('currency_', '')
@@ -70,6 +74,7 @@ def handle_currency_selection(call):
 
 @safe_step
 def create_job_price(message, language, name, description, currency):
+    user_state[message.from_user.id] = 'awaiting_create_job_price'
     user = get_user(message.from_user.id)
     contacts = user.phone if user.username is None else f"{user.phone}, username: {user.username}"
     price_text = message.text
@@ -96,6 +101,7 @@ def create_job_price(message, language, name, description, currency):
 
 @safe_step
 def create_job_location(message, language, name, description, currency, payment, contacts):
+    user_state[message.from_user.id] = 'awaiting_create_job_location'
     if message.location:
         latitude = message.location.latitude
         longitude = message.location.longitude
@@ -114,6 +120,7 @@ def create_job_location(message, language, name, description, currency, payment,
 
 @safe_step
 def create_job_category(message, language, name, description, currency, payment, contacts, location):
+    user_state[message.from_user.id] = 'awaiting_create_job_category'
     user_input = message.text.strip()
     category_ru = match_category_from_user_input(user_input, language)
     print(f"[DEBUG] Ввод пользователя: {user_input}")
@@ -168,6 +175,7 @@ def create_job_category(message, language, name, description, currency, payment,
 
 @safe_step
 def agree_job(message, language, name, description, category, payment, contacts):
+    user_state[message.from_user.id] = 'awaiting_create_job_agree'
     user = get_user(message.from_user.id)
     if message.text == '❌ Отменить':
         bot.send_message(message.chat.id, 'MENU', reply_markup=main_menu(message.from_user.id, language))
@@ -188,34 +196,35 @@ def agree_job(message, language, name, description, category, payment, contacts)
         bot.send_message(message.chat.id, 'MENU', reply_markup=main_menu(message.from_user.id, language))
 
 
-@bot.callback_query_handler(func=lambda call: call.data.startswith('vacancy_'))
+@bot.callback_query_handler(func=lambda call: call.data.startswith('job_delete'))
 def handle_vacancy_callback(call):
+    user_state[call.from_user.id] = 'awaiting_vacancy_callback'
     user = get_user(call.from_user.id)
+    vacacy_id = user_vacancies_list[user.tg_id][user_vacancy_index[user.tg_id]].id
     try:
         if call.data == 'main_menu':
             bot.answer_callback_query(call.id, "MENU")
             bot.edit_message_text("MENU", chat_id=call.message.chat.id, message_id=call.message.message_id)
-        elif call.data == 'vacancy_create':
-            bot.send_message(call.from_user.id, lang['create_job_name'][user.language], reply_markup=ReplyKeyboardRemove())
-            bot.register_next_step_handler(call.message, create_job_name, user.language)
-        elif call.data == 'vacancy_delete':
-            bot.send_message(call.from_user.id, lang['delete_vacancy'][user.language], reply_markup=delete_vacancy_keyboard(user.tg_id))
-            bot.register_next_step_handler(call.message, delete_job, user.language)
+        elif call.data == f'job_delete_{vacacy_id}':
+            bot.send_message(call.from_user.id, lang['delete_vacancy_agree'][user.language], reply_markup=agree(user.language))
+            bot.register_next_step_handler(call.message, delete_job, user.language, vacacy_id)
     except Exception as e:
         print(f"[ERROR handle_vacancy_callback] {e}")
         bot.answer_callback_query(call.id, "Произошла ошибка")  # Исправлено
 
 
 @safe_step
-def delete_job(message, language):
-    vacancy_name = message.text
-    if vacancy_name == '❌ Отменить':
+def delete_job(message, language, vacancy_id):
+    user_state[message.from_user.id] = 'awaiting_delete_job'
+    text = message.text
+    if text == '❌ Отменить' or text == '❌ Cancel' or text == '❌ Bekor qilish':
         bot.send_message(message.chat.id, 'MENU', reply_markup=main_menu(message.from_user.id, language))
         return
 
-    success = delete_vacancy(vacancy_name, message.from_user.id)
-    if success:
-        bot.send_message(message.chat.id, lang['delete_vacancy_success'][language], reply_markup=main_menu(message.from_user.id, language))
-    else:
-        bot.send_message(message.chat.id, lang['delete_vacancy_error'][language])
-        bot.register_next_step_handler(message, delete_job, language)
+    elif text == '✅ Подтвердить' or text == '✅ Confirm' or text == '✅ Tasdiqlash':
+        try:
+            delete_vacancy(vacancy_id, message.from_user.id)
+            bot.send_message(message.chat.id, lang['delete_vacancy_success'][language], reply_markup=ReplyKeyboardRemove())
+            bot.send_message(message.chat.id, 'MENU', reply_markup=main_menu(message.from_user.id, language))
+        except Exception as e:
+            print(f"[ERROR delete_job] {e}")
