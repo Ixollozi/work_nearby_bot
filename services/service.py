@@ -298,6 +298,13 @@ def get_vacancy_responses_count(vacancy_id):
 def has_user_responded(user_id, vacancy_id):
     return db.query(Response).filter(Response.user_id == user_id, Response.vacancy_id == vacancy_id).first() is not None
 
+def delete_user_response(user_id, response_id):
+    response = db.query(Response).filter(Response.user_id == user_id, Response.id == response_id).first()
+    if response:
+        db.delete(response)
+        db.commit()
+        return True
+    return False
 
 # --- Избранное ---
 def add_to_favorites(user_id, vacancy_id):

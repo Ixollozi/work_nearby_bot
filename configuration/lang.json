@@ -333,6 +333,21 @@
     "en": "❗ No responses",
     "uz": "❗ Javoblar mavjud emas"
   },
+  "delete_response_agree": {
+    "ru": "Вы уверены, что хотите удалить заявку?",
+    "en": "Are you sure you want to delete the response?",
+    "uz": "Javobni o'chirishni hohlaysizmi?"
+  },
+  "delete_response_success": {
+    "ru": "✅ Заявка успешно удалена",
+    "en": "✅ Response successfully deleted",
+    "uz": "✅ Javob muvaffaqiyatli o'chirildi"
+  },
+  "delete_response_error": {
+    "ru": "❗ При удалении заявки произошла ошибка",
+    "en": "❗ An error occurred while deleting the response",
+    "uz": "❗ Javobni o'chirishda xatolik yuz berdi"
+  },
   "already_responded": {
     "ru": "❗ Вы уже откликнулись",
     "en": "❗ You have already responded",

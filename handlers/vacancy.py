@@ -9,12 +9,15 @@ from configuration.config import user_state
 def create_job_name(message, language):
     user_state[message.from_user.id] = 'awaiting_create_job_name'
     if message.text.isdigit():
-        bot.send_message(message.chat.id, lang['create_job_name_error'][language])
+        bot.send_message(message.chat.id, lang['create_job_name_error'][language], reply_markup=cancel())
         bot.register_next_step_handler(message, create_job_name, language)
+    elif message.text == '❌ Отменить' or message.text == '❌ Cancel' or message.text == '❌ Bekor qilish':
+        user_state[message.from_user.id] = None
+        bot.send_message(message.chat.id, 'MENU:', reply_markup=main_menu(message.from_user.id, language))
     else:
         name = message.text
         if len(name) < 10 or len(name) > 50:
-            bot.send_message(message.chat.id, lang['create_job_name_len'][language])
+            bot.send_message(message.chat.id, lang['create_job_name_len'][language], reply_markup=cancel())
             bot.register_next_step_handler(message, create_job_name, language)
         else:
             bot.send_message(message.chat.id, lang['create_job_description'][language])
@@ -31,8 +34,12 @@ def create_job_description(message, language, name):
         'description': description,
         'currency': None
     }
-    if len(description) < 200 or len(description) > 1500:
-        bot.send_message(message.chat.id, lang['create_job_description_error'][language])
+    if message.text == '❌ Отменить' or message.text == '❌ Cancel' or message.text == '❌ Bekor qilish':
+        user_state[message.from_user.id] = None
+        bot.send_message(message.chat.id, 'MENU:', reply_markup=main_menu(message.from_user.id, language))
+
+    elif len(description) < 200 or len(description) > 1500:
+        bot.send_message(message.chat.id, lang['create_job_description_error'][language],reply_markup=cancel())
         bot.register_next_step_handler(message, create_job_description, language, name)
     else:
         bot.send_message(message.chat.id, lang['choose_currency'][language],
@@ -200,7 +207,8 @@ def agree_job(message, language, name, description, category, payment, contacts)
 def handle_vacancy_callback(call):
     user_state[call.from_user.id] = 'awaiting_vacancy_callback'
     user = get_user(call.from_user.id)
-    vacacy_id = user_vacancies_list[user.tg_id][user_vacancy_index[user.tg_id]].id
+    # vacacy_id = user_vacancies_list[user.tg_id][user_vacancy_index[user.tg_id]].id
+    vacacy_id = call.data.replace('job_delete_', '')
     try:
         if call.data == 'main_menu':
             bot.answer_callback_query(call.id, "MENU")

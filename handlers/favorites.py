@@ -3,13 +3,14 @@ from services.service import *
 from configuration.utils import *
 from configuration.config import user_state
 
-@bot.callback_query_handler(func=lambda call: call.data.startswith('favorite_delete'))
+@bot.callback_query_handler(func=lambda call: call.data.startswith('favorite_delete_'))
 def favorites(call):
     user_state[call.from_user.id] = 'awaiting_favorites'
     user_id = call.from_user.id
     user = get_user(user_id)
     language = user.language
-    favorite_id = user_favorites_list[user_id][user_favorite_index[user_id]].id
+    # favorite_id = user_favorites_list[user_id][user_favorite_index[user_id]].id
+    favorite_id = call.data.replace('favorite_delete_', '')
     if call.data == f'favorite_delete_{favorite_id}':
         bot.send_message(call.message.chat.id, lang['delete_favorites'][language], reply_markup=agree(language))
         bot.register_next_step_handler(call.message, delete_favorite, language, favorite_id)

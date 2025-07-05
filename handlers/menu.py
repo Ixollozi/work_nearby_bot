@@ -41,6 +41,7 @@ def handle_main_menu(call):
 
         elif call.data == 'create_job':
             bot.answer_callback_query(call.id, "Создание вакансии...")
+            bot.edit_message_reply_markup(call.message.chat.id, call.message.message_id, reply_markup=None)
             bot.send_message(user_id, lang['create_job_name'][language])
             bot.register_next_step_handler_by_chat_id(user_id, create_job_name, language)
 
@@ -135,12 +136,14 @@ def handle_main_menu(call):
 
         elif call.data == 'create':
             bot.answer_callback_query(call.id, "Добавление...")
+            bot.edit_message_reply_markup(call.message.chat.id, call.message.message_id, reply_markup=None)
             bot.send_message(user_id, lang['please_wait'][language])
             bot.send_message(user_id, lang['choose_category'][language], reply_markup=category_keyboard(language))
             bot.register_next_step_handler_by_chat_id(user_id, lambda msg: choose_category(msg, language, 'add'))
 
         elif call.data == 'delete':
             bot.answer_callback_query(call.id, "Удаление...")
+            bot.edit_message_reply_markup(call.message.chat.id, call.message.message_id, reply_markup=None)
             bot.send_message(user_id, lang['please_wait'][language])
             bot.send_message(user_id, lang['del_category'][language], reply_markup=category_keyboard(language))
             bot.register_next_step_handler_by_chat_id(user_id, lambda msg: choose_category(msg, language, 'delete'))
@@ -402,3 +405,36 @@ def paginate_items(call):
     except Exception as e:
         print(f"[ERROR paginate_items] user_id: {user_id}, error: {e}")
         bot.answer_callback_query(call.id, lang['error'][language] if 'error' in lang else "Произошла ошибка")
+
+@bot.callback_query_handler(func=lambda call: call.data.startswith('response_delete_'))
+def handle_delete_response(call):
+    user_state[call.from_user.id] = 'awaiting_handle_response_delete'
+    user_id = call.from_user.id
+    user = get_user(user_id)
+    response_id = int(call.data.replace('response_delete_', ''))
+    print(response_id)
+    if call.data == f'response_delete_{response_id}':
+        bot.send_message(call.message.chat.id, lang['delete_response_agree'][user.language], reply_markup=agree(user.language))
+        bot.register_next_step_handler(call.message, delete_response, response_id, user.language)
+
+@safe_step
+def delete_response(message, response_id, language):
+    user_state[message.from_user.id] = 'awaiting_delete_response'
+    text = message.text
+    if text == '❌ Отменить' or text == '❌ Cancel' or text == '❌ Bekor qilish':
+        bot.send_message(message.chat.id, 'MENU', reply_markup=main_menu(message.from_user.id, language))
+        return
+
+    elif text == '✅ Подтвердить' or text == '✅ Confirm' or text == '✅ Tasdiqlash':
+        try:
+            delete_user_response(message.from_user.id, response_id)
+            bot.send_message(message.chat.id, lang['delete_response_success'][language],
+                             reply_markup=ReplyKeyboardRemove())
+            bot.send_message(message.chat.id, 'MENU', reply_markup=main_menu(message.from_user.id, language))
+
+        except Exception as e:
+            print(f"[ERROR delete_favorite] {e}")
+    else:
+        bot.send_message(message.chat.id, lang['delete_response_error'][language])
+        bot.send_message(message.chat.id, 'MENU', reply_markup=main_menu(message.from_user.id, language))
+

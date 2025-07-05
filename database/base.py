@@ -102,7 +102,7 @@ class Response(Base):
 
     vacancy = relationship("Vacancy", back_populates="responses")
 
-# Favorite.__table__.drop(bind=engine)
+
 Base.metadata.create_all(bind=engine)
 
 
