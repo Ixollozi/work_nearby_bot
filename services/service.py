@@ -331,16 +331,24 @@ def is_favorite(user_id, vacancy_id):
 
 # --- Удаление ---
 def delete_expired_vacancies():
-    expired = db.query(Vacancy).filter(Vacancy.expires_at < datetime.utcnow()).all()
-    for v in expired:
-        db.delete(v)
-    db.commit()
+    try:
+        expired = db.query(Vacancy).filter(Vacancy.expires_at < datetime.utcnow()).all()
+        for v in expired:
+            db.delete(v)
+        db.commit()
+    except Exception as e:
+        print(f"Error deleting expired vacancies: {e}")
+        db.rollback()
 
 def delete_expired_responses():
-    expired = db.query(Response).filter(Response.expires_at < datetime.utcnow()).all()
-    for v in expired:
-        db.delete(v)
-    db.commit()
+    try:
+        expired = db.query(Response).filter(Response.expires_at < datetime.utcnow()).all()
+        for v in expired:
+            db.delete(v)
+        db.commit()
+    except Exception as e:
+        print(f"Error deleting expired responses: {e}")
+        db.rollback()
 
 
 # --- admin ---

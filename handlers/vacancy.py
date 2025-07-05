@@ -208,14 +208,14 @@ def handle_vacancy_callback(call):
     user_state[call.from_user.id] = 'awaiting_vacancy_callback'
     user = get_user(call.from_user.id)
     # vacacy_id = user_vacancies_list[user.tg_id][user_vacancy_index[user.tg_id]].id
-    vacacy_id = call.data.replace('job_delete_', '')
+    vacancy_id = call.data.replace('job_delete_', '')
     try:
         if call.data == 'main_menu':
             bot.answer_callback_query(call.id, "MENU")
             bot.edit_message_text("MENU", chat_id=call.message.chat.id, message_id=call.message.message_id)
-        elif call.data == f'job_delete_{vacacy_id}':
+        elif call.data == f'job_delete_{vacancy_id}':
             bot.send_message(call.from_user.id, lang['delete_vacancy_agree'][user.language], reply_markup=agree(user.language))
-            bot.register_next_step_handler(call.message, delete_job, user.language, vacacy_id)
+            bot.register_next_step_handler(call.message, delete_job, user.language, vacancy_id)
     except Exception as e:
         print(f"[ERROR handle_vacancy_callback] {e}")
         bot.answer_callback_query(call.id, "Произошла ошибка")  # Исправлено
