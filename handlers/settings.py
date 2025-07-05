@@ -13,6 +13,7 @@ def unified_settings_handler(call):
     data = call.data
 
     if data == 'change_language':
+        bot.delete_message(user_id, call.message.message_id)
         bot.send_message(user_id, lang['change_language'][user.language], reply_markup=change_language())
         return
 
@@ -32,16 +33,19 @@ def unified_settings_handler(call):
 
     # Смена радиуса
     if data == 'change_radius':
+        bot.delete_message(user_id, call.message.message_id)
         bot.send_message(user_id, lang['change_radius'][user.language], reply_markup=get_radius(user.language))
         bot.register_next_step_handler_by_chat_id(user_id, handle_radius_change, user)
         return
 
     if data == 'switch_role':
+        bot.delete_message(user_id, call.message.message_id)
         bot.send_message(user_id, lang['switch_role'][user.language], reply_markup=get_role_keyboard(user.language))
         bot.register_next_step_handler_by_chat_id(user_id, handle_role_change, user)
         return
 
     if data == 'edit_profile':
+        bot.delete_message(user_id, call.message.message_id)
         language = user.language
         bot.send_message(user_id, lang['change_name'][language], reply_markup=ReplyKeyboardRemove())
         bot.register_next_step_handler_by_chat_id(user_id, get_user_name_edit, language)

@@ -80,7 +80,7 @@ class Vacancy(Base):
     priority = Column(Boolean, default=False)
 
     owner = relationship("User", back_populates="vacancies")
-    responses = relationship("Response", back_populates="vacancy")
+    responses = relationship("Response", back_populates="vacancy", cascade="all, delete-orphan")
     category_fk = relationship("Category", back_populates="vacancies")
 
 class Favorite(Base):
@@ -90,7 +90,7 @@ class Favorite(Base):
     vacancy_id = Column(Integer, ForeignKey('vacancies.id'))
 
     user = relationship("User", back_populates="favorites")
-    vacancy = relationship("Vacancy")
+    vacancy = relationship("Vacancy", cascade="all, delete")
 
 class Response(Base):
     __tablename__ = 'responses'
@@ -104,5 +104,3 @@ class Response(Base):
 
 
 Base.metadata.create_all(bind=engine)
-
-

@@ -16,7 +16,7 @@
   },
   "role_error": {
     "uz": "Iltimos, rolingizni tugma orqali tanlang 👆",
-    "ru": "Пожалуйста, выберите роль кнопкой 👆",
+    "ru": "Пожалуйста, выберите статус кнопкой 👆",
     "en": "Please choose your role using the buttons 👆"
   },
   "phone": {
@@ -127,9 +127,9 @@
     "en": "❗ Invalid job title. Please try again."
   },
   "create_job_description": {
-    "uz": "📄 Ish tavsifini yozing",
-    "ru": "📄 Пожалуйста, введите  описание работы",
-    "en": "📄 Please enter a job description"
+    "uz": "📄 Ish tavsifini yozing\n Misol:\n- Sozlamalar\n- Ish joyi\n- Ish joyi\n- Ish joyi\n- Ish joyi\n- Ish joyi\n- Ish joyi",
+    "ru": "📄 Пожалуйста, введите  полное описание работы\n Например: \n- Требования\n- Обязанности\n- Условия\n- Опыт\n- Будет плюсом\n- Условия",
+    "en": "📄 Please enter the full description of the job\n For example:\n- Requirements\n- Responsibilities\n- Conditions\n- Experience\n- Will be plus\n- Conditions"
   },
   "create_job_description_error": {
     "uz": "❗ Ish tavsifini 200 va 1500 belgidan uzun bo'lishi kerak.",
@@ -368,7 +368,7 @@
       "🔧 Редактировать профиль",
       "🌐 Сменить язык",
       "📍 Изменить радиус поиска",
-      "🔄 Сменить роль",
+      "🔄 Сменить статус",
       "🔙 Назад"
     ],
     "en": [
@@ -402,7 +402,7 @@
     "uz": "Yangi qidiruv radiusini tanlang:"
   },
   "switch_role": {
-    "ru": "Выберите новую роль:",
+    "ru": "Выберите новую статус:",
     "en": "Select a new role:",
     "uz": "Yangi rolni tanlang:"
   },

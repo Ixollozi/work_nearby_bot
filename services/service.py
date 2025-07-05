@@ -75,7 +75,6 @@ def get_category_id(category_name):
     return category.id if category else None
 
 def get_all_categories():
-    """Получить все категории"""
     return db.query(Category).all()
 
 def get_category_by_id(category_id):
@@ -150,6 +149,7 @@ def calculate_distance(lat1, lon1, lat2, lon2):
     c = 2 * asin(sqrt(a))
     distance_km = R * c
     return distance_km
+
 def get_vacancies_nearby(user_lat, user_lon, radius_meters, categories=None):
     all_vacancies = db.query(Vacancy).filter(Vacancy.expires_at >= datetime.utcnow()).all()
     filtered = []
@@ -205,13 +205,6 @@ def get_all_vacancies():
 def get_vacancy_by_id(vacancy_id):
     return db.query(Vacancy).filter(Vacancy.id == vacancy_id).first()
 
-def get_vacancy_by_title(title):
-    return db.query(Vacancy).filter(Vacancy.title == title).first()
-
-def get_address_from_coordinates(latitude, longitude):
-    geolocator = Nominatim(user_agent="vacancy_bot")
-    location = geolocator.reverse((latitude,longitude))
-    return location
 
 
 
