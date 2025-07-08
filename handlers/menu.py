@@ -1,3 +1,4 @@
+from telebot.types import InputMediaPhoto
 from handlers.find_job import *
 from handlers.vacancy import create_job_name
 from configuration.config import (user_responses_list, user_response_index, geolocator,
@@ -5,6 +6,11 @@ from configuration.config import (user_responses_list, user_response_index, geol
 import random
 from deep_translator import GoogleTranslator
 
+status = {
+    'approved': ['✅ Одобрено', '✅ approved', '✅ tasdiqlangan'],
+    'rejected': ['🚫 Отклонено', '🚫 rejected', '🚫 tolangan'],
+    'pending': ['⌛️ Ожидает одобрения', '⌛️ pending', '⌛️ tasdiqlanish uchun'],
+}
 
 @bot.callback_query_handler(func=lambda call: call.data in
                                               ['find_job', 'create_job', 'favorite', 'settings', 'my_vacancy',
@@ -245,6 +251,7 @@ def show_current_my_vacancy(bot, user_id, language, call=None):
 
     text = {
         'ru': f"📌 {vacancy.title}\n\n"
+              f"{status[vacancy.status][0]}\n\n"
               f"📝 {vacancy.description}\n\n"
               f"💰 {vacancy.payment}\n"
               f"📂 Категория: {translated_category}\n"
@@ -253,6 +260,7 @@ def show_current_my_vacancy(bot, user_id, language, call=None):
               f"📅 Создано: {vacancy.created_at.strftime('%d.%m.%Y %H:%M')}\n\n"
               f"📄 Вакансия {index + 1} из {len(vacancies)}",
         'en': f"📌 {vacancy.title}\n\n"
+              f"{status[vacancy.status][1]}\n\n"
               f"📝 {vacancy.description}\n\n"
               f"💰 {vacancy.payment}\n"
               f"📂 Category: {translated_category}\n"
@@ -261,6 +269,7 @@ def show_current_my_vacancy(bot, user_id, language, call=None):
               f"📅 Created: {vacancy.created_at.strftime('%d.%m.%Y %H:%M')}\n\n"
               f"📄 Vacancy {index + 1} of {len(vacancies)}",
         'uz': f"📌 {vacancy.title}\n\n"
+              f"{status[vacancy.status][2]}\n\n"
               f"📝 {vacancy.description}\n\n"
               f"💰 {vacancy.payment}\n"
               f"📂 Kategoriya: {translated_category}\n"
@@ -273,18 +282,24 @@ def show_current_my_vacancy(bot, user_id, language, call=None):
     markup = navigation(user_id,item_type='vacancy')
 
     try:
-        if call:
-            bot.edit_message_text(
-                chat_id=call.message.chat.id,
-                message_id=call.message.message_id,
-                text=text[language],
-                reply_markup=markup
-            )
+        if vacancy.photo:
+            if call:
+                bot.edit_message_media(
+                    media=InputMediaPhoto(vacancy.photo, caption=text[language]),
+                    chat_id=call.message.chat.id,
+                    message_id=call.message.message_id,
+                    reply_markup=markup
+                )
+            else:
+                bot.send_photo(user_id, vacancy.photo, caption=text[language], reply_markup=markup)
         else:
             bot.send_message(user_id, text[language], reply_markup=markup)
     except Exception as e:
-        print(f"[ERROR show_current_my_vacancy] user_id: {user_id}, error: {e}")
-        bot.send_message(user_id, text[language], reply_markup=markup)
+        if "message is not modified" in str(e).lower():
+            print("[INFO] Message not modified, skipping.")
+        else:
+            print(f"[ERROR show_current_my_vacancy] user_id: {user_id}, error: {e}")
+            bot.send_message(user_id, text[language], reply_markup=markup)
 
 def show_current_favorite(bot, user_id, language, call=None):
     """

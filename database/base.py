@@ -75,6 +75,8 @@ class Vacancy(Base):
     longitude = Column(Float, nullable=False)
     contact = Column(String, nullable=False)
     category = Column(Integer, ForeignKey('categories.id'))
+    photo = Column(String)
+    status = Column(String)
     created_at = Column(DateTime, default=datetime.utcnow)
     expires_at = Column(DateTime, default=lambda: datetime.utcnow() + timedelta(days=7))
     priority = Column(Boolean, default=False)

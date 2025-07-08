@@ -121,21 +121,34 @@ def delete_user_category(user_id, category_id):
 
 
 # --- Вакансии ---
-def create_vacancy(user_id, title, description, payment, latitude, longitude, contact, category, expires_at, priority=False):
-    vacancy = Vacancy(
-        user_id=user_id,
-        title=title,
-        description=description,
-        payment=payment,
-        latitude=latitude,
-        longitude=longitude,
-        contact=contact,
-        category=category,
-        expires_at=expires_at,
-        priority=priority
-    )
-    db.add(vacancy)
-    db.commit()
+def create_vacancy(user_id, title, description, payment, latitude, longitude, contact, category, expires_at,
+                   photo_id=None):
+    try:
+        vacancy = Vacancy(
+            user_id=user_id,
+            title=title,
+            description=description,
+            payment=payment,
+            latitude=latitude,
+            longitude=longitude,
+            contact=contact,
+            category=category,  # Это должно быть ID категории
+            photo=photo_id,  # Изменено с photo_id на photo
+            status='pending',  # По умолчанию статус "на рассмотрении"
+            expires_at=expires_at
+        )
+
+        db.add(vacancy)
+        db.commit()
+
+        vacancy_id = vacancy.id
+        print(f"[INFO] Создана вакансия с ID {vacancy_id}")
+        return vacancy_id
+
+    except Exception as e:
+        print(f"[ERROR create_vacancy] {e}")
+        db.rollback()
+        return None
 
 def get_user_vacancies(user_id):
     return db.query(Vacancy).filter(Vacancy.user_id == user_id).all()
@@ -204,6 +217,13 @@ def get_all_vacancies():
 
 def get_vacancy_by_id(vacancy_id):
     return db.query(Vacancy).filter(Vacancy.id == vacancy_id).first()
+
+def update_vacancy(vacancy_id, **kwargs):
+    vacancy = db.query(Vacancy).filter(Vacancy.id == vacancy_id).first()
+    if vacancy:
+        for key, value in kwargs.items():
+            setattr(vacancy, key, value)
+        db.commit()
 
 
 

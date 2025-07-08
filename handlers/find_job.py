@@ -23,18 +23,22 @@ def show_current_vacancy(bot, user_id, language):
         translated_category = GoogleTranslator(source='auto', target=language).translate(vacancy.category)
     except:
         translated_category = vacancy.category
-
-    text = (
-        f"📌 {vacancy.title}\n\n"
-        f"📂 {translated_category}\n\n"
-        f"📝 {vacancy.description[:400]}...\n\n"
-        f"💰 {vacancy.payment}\n"
-        f"📍 {distance_text}\n"
-        f"📞 {vacancy.contact}"
-    )
-
-    markup = get_vacancy_keyboard(language)
-    bot.send_message(user_id, text, reply_markup=markup)
+    if vacancy.status == 'approved':
+        text = (
+            f"📌 {vacancy.title}\n\n"
+            f"📂 {translated_category}\n\n"
+            f"📝 {vacancy.description[:400]}...\n\n"
+            f"💰 {vacancy.payment}\n"
+            f"📍 {distance_text}\n"
+            f"📞 {vacancy.contact}"
+        )
+        markup = get_vacancy_keyboard(language)
+        if vacancy.photo:
+            bot.send_photo(user_id, vacancy.photo, caption=text, reply_markup=markup)
+        else:
+            bot.send_message(user_id, text, reply_markup=markup)
+    else:
+        bot.send_message(user_id, lang['no_vacancy'][language], reply_markup=main_menu(user_id, language))
 
 
 @bot.callback_query_handler(func=lambda call: call.data in ['next_vacancy', 'add_to_favorite', 'respond'])
