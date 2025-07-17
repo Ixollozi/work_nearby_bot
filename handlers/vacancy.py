@@ -1,8 +1,9 @@
-from configuration.config import user_create_job_data, geolocator
+from configuration.config import user_create_job_data, geolocator, PAYMENT_PROVIDER_TOKEN
 from configuration.utils import *
 from datetime import timezone
 from services.buttons import *
-from configuration.config import user_state
+from configuration.config import user_state, PAYMENT_AMOUNT, user_payment
+
 
 # ID группы администраторов
 ADMIN_GROUP_ID = -4879632469
@@ -41,7 +42,7 @@ def create_job_description(message, language, name):
         user_state[message.from_user.id] = None
         bot.send_message(message.chat.id, 'MENU:', reply_markup=main_menu(message.from_user.id, language))
 
-    elif len(description) < 200 or len(description) > 1500:
+    elif len(description) < 200 or len(description) > 1000:
         bot.send_message(message.chat.id, lang['create_job_description_error'][language], reply_markup=cancel())
         bot.register_next_step_handler(message, create_job_description, language, name)
     else:
@@ -295,44 +296,73 @@ def show_job_preview(message, language, name, description, category, payment, co
                                    photo_id)
 
 
+
 @safe_step
-def agree_job(message, language, name, description, category, payment, contacts,
-              photo=None):
+def agree_job(message, language, name, description, category, payment, contacts, photo=None):
     user_state[message.from_user.id] = 'awaiting_create_job_agree'
     user = get_user(message.from_user.id)
 
-    if message.text == '❌ Отменить' or message.text == '❌ Cancel' or message.text == '❌ Bekor qilish':
+    if message.text in ['❌ Отменить', '❌ Cancel', '❌ Bekor qilish']:
+        user_state[message.from_user.id] = None
         bot.send_message(message.chat.id, 'MENU', reply_markup=main_menu(message.from_user.id, language))
         return
 
-    if message.text == '✅ Подтвердить' or message.text == '✅ Confirm' or message.text == '✅ Tasdiqlash':
-        # Создаем вакансию
-        vacancy_id = create_vacancy(
-            user_id=message.from_user.id,
-            title=name,
-            description=description,
-            payment=payment,
-            latitude=user.latitude,
-            longitude=user.longitude,
-            contact=contacts,
-            category=category,
-            expires_at=datetime.now(timezone.utc) + timedelta(days=30),
-            photo_id=photo  # Параметр остается photo_id, но внутри функции используется photo
-        )
+    if message.text in ['✅ Подтвердить', '✅ Confirm', '✅ Tasdiqlash']:
+        # Сохраняем данные вакансии временно
+        user_create_job_data[message.from_user.id] = {
+            'language': language,
+            'name': name,
+            'description': description,
+            'category': category,
+            'payment': payment,
+            'contacts': contacts,
+            'photo_id': photo,
+            'latitude': user.latitude,
+            'longitude': user.longitude
+        }
 
-        # Отправляем уведомление пользователю
-        bot.send_message(message.chat.id, lang['create_job_agree'][language], reply_markup=ReplyKeyboardRemove())
+        # Формируем данные для счёта
+        invoice_title = lang['invoice_title'][language].format(name=name)
+        invoice_description = lang['invoice_description'][language].format(name=name)
+        payload = f"job_posting_{message.from_user.id}_{vacancy_id_generator()}"  # Уникальный идентификатор платежа
+        currency = "UZS"  # Валюта для Click
+        prices = [LabeledPrice(label=lang['job_posting_fee'][language], amount=PAYMENT_AMOUNT)]
 
-        # Отправляем вакансию в группу админов на рассмотрение
-        send_job_to_admin_group(vacancy_id, user, name, description, payment, category, contacts, user.latitude,
-                                user.longitude, photo)
+        user_payment[message.from_user.id] = {
+            'payload': payload,
+            'prices': prices
+        }
 
-        bot.send_message(message.chat.id, 'MENU', reply_markup=main_menu(message.from_user.id, language))
+        # Отправляем счёт пользователю
+        try:
+            bot.send_invoice(
+                chat_id=message.chat.id,
+                title=invoice_title,
+                description=invoice_description,
+                invoice_payload=payload,
+                provider_token=PAYMENT_PROVIDER_TOKEN,
+                currency=currency,
+                prices=prices,
+                start_parameter=f"job-posting-{message.from_user.id}",
+                need_name=False,
+                need_phone_number=False,
+                need_email=False,
+                need_shipping_address=False,
+                is_flexible=False
+            )
+
+            # Сообщаем пользователю, что нужно оплатить
+            bot.send_message(
+                message.chat.id,
+                lang['payment_required'][language],
+                reply_markup=ReplyKeyboardRemove()
+            )
+        except Exception as e:
+            print(f"[ERROR send_invoice] {e}")
+            bot.send_message(message.chat.id, lang['payment_error'][language], reply_markup=main_menu(message.from_user.id, language))
     else:
         bot.send_message(message.chat.id, "Пожалуйста, выберите один из вариантов:", reply_markup=agree(language))
-        bot.register_next_step_handler(message, agree_job, language, name, description, category, payment, contacts,
-                                       photo)
-
+        bot.register_next_step_handler(message, agree_job, language, name, description, category, payment, contacts, photo)
 
 def send_job_to_admin_group(vacancy_id, user, name, description, payment, category, contacts, latitude, longitude,
                             photo_id=None):
@@ -492,3 +522,101 @@ def delete_job(message, language, vacancy_id):
             bot.send_message(message.chat.id, 'MENU', reply_markup=main_menu(message.from_user.id, language))
         except Exception as e:
             print(f"[ERROR delete_job] {e}")
+
+# Обработчик предпроверки платежа
+@bot.pre_checkout_query_handler(func=lambda query: True)
+def handle_pre_checkout_query(pre_checkout_query):
+    user_id = pre_checkout_query.from_user.id
+    payload = pre_checkout_query.invoice_payload
+    language = get_user(user_id).language
+
+    try:
+        if not payload.startswith('job_posting_'):
+            bot.answer_pre_checkout_query(
+                pre_checkout_query.id,
+                ok=False,
+                error_message=lang['invalid_payment'][language]
+            )
+            return
+
+        if user_id not in user_create_job_data:
+            bot.answer_pre_checkout_query(
+                pre_checkout_query.id,
+                ok=False,
+                error_message=lang['data_missing'][language]
+            )
+            return
+
+        bot.answer_pre_checkout_query(pre_checkout_query.id, ok=True)
+    except Exception as e:
+        print(f"[ERROR handle_pre_checkout_query] {e}")
+        bot.answer_pre_checkout_query(
+            pre_checkout_query.id,
+            ok=False,
+            error_message=lang['payment_error'][language]
+        )
+
+# Обработчик успешного платежа
+@bot.message_handler(content_types=['successful_payment'])
+def handle_successful_payment(message):
+    user_id = message.from_user.id
+    user_state[user_id] = 'payment_successful'
+    language = get_user(user_id).language
+
+    # Получаем данные вакансии
+    job_data = user_create_job_data.get(user_id)
+    if not job_data:
+        bot.send_message(message.chat.id, lang['data_missing'][language], reply_markup=main_menu(user_id, language))
+        return
+
+    # Извлекаем данные
+    name = job_data['name']
+    description = job_data['description']
+    category = job_data['category']
+    payment = job_data['payment']
+    contacts = job_data['contacts']
+    photo = job_data['photo_id']
+    latitude = job_data['latitude']
+    longitude = job_data['longitude']
+
+    try:
+        # Создаём вакансию в базе данных
+        vacancy_id = create_vacancy(
+            user_id=user_id,
+            title=name,
+            description=description,
+            payment=payment,
+            latitude=latitude,
+            longitude=longitude,
+            contact=contacts,
+            category=category,
+            expires_at=datetime.now(timezone.utc) + timedelta(days=30),
+            photo_id=photo
+        )
+        write_payment(user_id, vacancy_id, user_payment[user_id]['prices'][0].amount, user_payment[user_id]['payload'])
+
+        # Уведомляем пользователя об успешной оплате
+        bot.send_message(
+            message.chat.id,
+            lang['payment_success'][language].format(
+                amount=message.successful_payment.total_amount / 100,
+                currency=message.successful_payment.currency
+            ),
+            reply_markup=main_menu(user_id, language)
+        )
+
+        # Отправляем вакансию в группу админов
+        send_job_to_admin_group(vacancy_id, get_user(user_id), name, description, payment, category, contacts, latitude, longitude, photo)
+
+        # Очищаем временные данные
+        user_create_job_data.pop(user_id, None)
+        user_payment.pop(user_id, None)
+        user_state[user_id] = None
+    except Exception as e:
+        print(f"[ERROR handle_successful_payment] {e}")
+        bot.send_message(message.chat.id, lang['payment_error'][language], reply_markup=main_menu(user_id, language))
+
+# Генератор уникального ID для вакансии
+def vacancy_id_generator():
+    import uuid
+    return str(uuid.uuid4())

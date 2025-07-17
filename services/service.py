@@ -378,3 +378,32 @@ def remove_admin(tg_id):
         user.is_admin = 0
         db.commit()
 
+# --- Оплата ---
+def create_cost():
+    settings = db.query(Settings).all()
+    if not settings:
+        settings = Settings(cost=5000)
+        db.add(settings)
+        db.commit()
+    return settings
+
+def get_cost():
+    settings = db.query(Settings).first()
+    return settings.cost
+
+def write_payment(user_id, vacancy_id, value, payload):
+    try:
+        payment = Payment(user_id=user_id, vacancy_id=vacancy_id, value=value, payload=payload)
+        db.add(payment)
+        db.commit()
+    except Exception as e:
+        print(f"Error adding payment: {e}")
+        db.rollback()
+
+
+def update_cost(cost):
+    settings = db.query(Settings).first()
+    if settings:
+        settings.cost = cost
+        db.commit()
+

@@ -1,7 +1,7 @@
 import logging
 import traceback
 from config import bot
-from services.service import initialize_categories, delete_expired_vacancies, delete_expired_responses
+from services.service import initialize_categories, delete_expired_vacancies, delete_expired_responses,create_cost
 from handlers import admin, find_job, register, vacancy, menu, favorites, settings
 
 # Настройка детального логирования
@@ -29,4 +29,5 @@ if __name__ == '__main__':
     initialize_categories()
     delete_expired_vacancies()
     delete_expired_responses()
+    create_cost()
     main()

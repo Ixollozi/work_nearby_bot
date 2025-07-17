@@ -1,6 +1,6 @@
 from telebot import types
 from services.service import *
-from telebot.types import InlineKeyboardMarkup, InlineKeyboardButton, ReplyKeyboardMarkup, KeyboardButton, ReplyKeyboardRemove
+from telebot.types import InlineKeyboardMarkup, InlineKeyboardButton, ReplyKeyboardMarkup, KeyboardButton, ReplyKeyboardRemove, LabeledPrice
 from deep_translator import GoogleTranslator
 from configuration.config import (user_vacancy_index, user_vacancies_list, user_favorites_list,
                                   user_favorite_index, user_responses_list, user_response_index)
@@ -76,7 +76,7 @@ def admin_menu():
     markup.add( '🗂 Добавить категорию','🗂 Удалить категорию')
     markup.add('🗂 Все категории 🗂')
     markup.add('⚙️ Настройки', '🔍 Найти и удалить вакансию')
-    markup.add('❌ Выход из админки')
+    markup.add('$ Изменить стоимость вакансий','❌ Выход из админки')
     return markup
 
 def cancel():
@@ -195,4 +195,15 @@ def settings_kb(language):
     markup.add(edit_profile, change_language, change_radius, switch_role, back)
     return markup
 
-
+def payment_keyboard(language, payment_url):
+    keyboard = InlineKeyboardMarkup()
+    if language == 'ru':
+        keyboard.add(InlineKeyboardButton("💳 Оплатить", url=payment_url))
+        keyboard.add(InlineKeyboardButton("❌ Отменить", callback_data="cancel_payment"))
+    elif language == 'uz':
+        keyboard.add(InlineKeyboardButton("💳 To'lov qilish", url=payment_url))
+        keyboard.add(InlineKeyboardButton("❌ Bekor qilish", callback_data="cancel_payment"))
+    else:  # en
+        keyboard.add(InlineKeyboardButton("💳 Pay", url=payment_url))
+        keyboard.add(InlineKeyboardButton("❌ Cancel", callback_data="cancel_payment"))
+    return keyboard

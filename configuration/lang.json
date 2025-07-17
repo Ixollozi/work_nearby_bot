@@ -132,9 +132,9 @@
     "en": "📄 Please enter the full description of the job\n For example:\n- Requirements\n- Responsibilities\n- Conditions\n- Experience\n- Will be plus\n- Conditions"
   },
   "create_job_description_error": {
-    "uz": "❗ Ish tavsifini 200 va 1500 belgidan uzun bo'lishi kerak.",
-    "ru": "❗ Описание должно быть длиннее 200 и меньше 1500 символов.",
-    "en": "❗ Description must be longer than 200 and shorter than 1500 characters."
+    "uz": "❗ Ish tavsifini 200 va 1000 belgidan uzun bo'lishi kerak.",
+    "ru": "❗ Описание должно быть длиннее 200 и меньше 1000 символов.",
+    "en": "❗ Description must be longer than 200 and shorter than 1000 characters."
   },
   "choose_currency": {
     "uz": "💰 Valyutani tanlang",
@@ -415,5 +415,45 @@
     "ru": "✅ Успешно изменено",
     "en": "✅ Successfully changed",
     "uz": "✅ Muvaffaqiyatli o'zgartirildi"
+  },
+  "invoice_title": {
+    "ru": "Оплата за публикацию вакансии: {name}",
+    "uz": "Vakansiya joylashtirish uchun to'lov: {name}",
+    "en": "Payment for job posting: {name}"
+  },
+  "invoice_description": {
+    "ru": "Оплата за размещение вакансии '{name}' на платформе Rabota_ryadom.uz",
+    "uz": "'{name}' vakansiyasini Rabota_ryadom.uz platformasida joylashtirish uchun to'lov",
+    "en": "Payment for posting the job '{name}' on the Rabota_ryadom.uz platform"
+  },
+  "job_posting_fee": {
+    "ru": "Плата за публикацию вакансии",
+    "uz": "Vakansiya joylashtirish haqi",
+    "en": "Job posting fee"
+  },
+  "payment_required": {
+    "ru": "Пожалуйста, оплатите публикацию вакансии, чтобы продолжить.",
+    "uz": "Iltimos, vakansiyani joylashtirish uchun to'lovni amalga oshiring.",
+    "en": "Please complete the payment to post the job."
+  },
+  "payment_success": {
+    "ru": "Оплата на сумму {amount} {currency} успешно завершена! Вакансия отправлена на рассмотрение.",
+    "uz": "{amount} {currency} miqdoridagi to'lov muvaffaqiyatli yakunlandi! Vakansiya ko'rib chiqishga yuborildi.",
+    "en": "Payment of {amount} {currency} successfully completed! The job has been sent for review."
+  },
+  "invalid_payment": {
+    "ru": "Недействительный платёж. Пожалуйста, попробуйте снова.",
+    "uz": "Noto'g'ri to'lov. Iltimos, qayta urinib ko'ring.",
+    "en": "Invalid payment. Please try again."
+  },
+  "data_missing": {
+    "ru": "Ошибка: данные вакансии отсутствуют. Пожалуйста, начните заново.",
+    "uz": "Xato: vakansiya ma'lumotlari yo'q. Iltimos, qaytadan boshlang.",
+    "en": "Error: job data is missing. Please start over."
+  },
+  "payment_error": {
+    "ru": "Ошибка при обработке платежа. Пожалуйста, попробуйте снова.",
+    "uz": "To'lovni qayta ishlashda xato. Iltimos, qayta urinib ko'ring.",
+    "en": "Error processing payment. Please try again."
   }
 }

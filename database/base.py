@@ -104,5 +104,19 @@ class Response(Base):
 
     vacancy = relationship("Vacancy", back_populates="responses")
 
+class Payment(Base):
+    __tablename__ = 'payments'
+    id = Column(Integer, primary_key=True)
+    user_id = Column(Integer, ForeignKey('users.id'))
+    vacancy_id = Column(Integer, ForeignKey('vacancies.id'))
+    value = Column(Float)
+    payload = Column(String)
+    payment_time = Column(DateTime, default=datetime.utcnow)
+
+class Settings(Base):
+    __tablename__ = 'settings'
+    id = Column(Integer, primary_key=True)
+    cost = Column(Integer, nullable=False, default=5000 * 100)
+
 
 Base.metadata.create_all(bind=engine)

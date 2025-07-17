@@ -73,6 +73,9 @@ def handle_admin_menu(message):
     elif message.text == '🔍 Найти и удалить вакансию':
         bot.send_message(message.chat.id, 'Введите ID или название вакансии для поиска:', reply_markup=cancel())
         bot.register_next_step_handler(message, search_vacancy)
+    elif message.text == '$ Изменить стоимость вакансий':
+        bot.send_message(message.chat.id, 'Введите цену, сколько будет стоить вакансия (например, 1000):', reply_markup=cancel())
+        bot.register_next_step_handler(message, change_vacancy_price)
 
     elif message.text == '❌ Выход из админки':
         user = get_user(message.from_user.id)
@@ -251,6 +254,29 @@ def search_vacancy(message):
 
     bot.send_message(message.chat.id, 'Найденные вакансии:', reply_markup=markup)
     bot.register_next_step_handler(message, search_vacancy)
+
+@safe_step
+def change_vacancy_price(message):
+    user_state[message.from_user.id] = 'awaiting_admin_menu_change_vacancy_price'
+    if message.text == '❌ Отменить':
+        bot.send_message(message.chat.id, 'Вы в админ-панели.', reply_markup=admin_menu())
+        bot.register_next_step_handler(message, handle_admin_menu)
+        return
+
+    try:
+        cost = int(message.text.strip())
+        if cost < 0:
+            bot.send_message(message.chat.id, 'Цена не может быть отрицательной.', reply_markup=admin_menu())
+            bot.register_next_step_handler(message, change_vacancy_price)
+            return
+
+        update_cost(cost)
+        bot.send_message(message.chat.id, f'Цена вакансии изменена на {cost} UZS.', reply_markup=admin_menu())
+        bot.send_message(message.chat.id, 'Вы в админ-панели.', reply_markup=admin_menu())
+        bot.register_next_step_handler(message, handle_admin_menu)
+    except ValueError:
+        bot.send_message(message.chat.id, 'Введите цену в виде числа.', reply_markup=admin_menu())
+        bot.register_next_step_handler(message, change_vacancy_price)
 
 
 @bot.callback_query_handler(func=lambda call: call.data.startswith('vacancy_'))

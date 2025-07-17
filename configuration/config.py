@@ -1,4 +1,5 @@
 from telebot import TeleBot
+from services.service import get_cost
 import requests
 import logging
 from dotenv import load_dotenv
@@ -9,6 +10,12 @@ logging.basicConfig(level=logging.INFO)
 
 load_dotenv()
 BOT_TOKEN = os.getenv("TELEGRAM_BOT_TOKEN")
+CLICK_MERCHANT_ID = os.getenv('CLICK_MERCHANT_ID')
+CLICK_SECRET_KEY = os.getenv('CLICK_SECRET_KEY')
+PAYMENT_PROVIDER_TOKEN = os.getenv('PAYMENT_PROVIDER_TOKEN')
+
+cost = get_cost()
+PAYMENT_AMOUNT = cost * 100
 
 
 # Глобальные переменные и константы
@@ -26,6 +33,7 @@ user_responses_list = {}
 user_response_index = {}
 user_favorites_list = {}
 user_favorite_index = {}
+user_payment = {}
 
 # Геолокатор
 
