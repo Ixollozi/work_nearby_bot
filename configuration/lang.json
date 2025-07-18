@@ -422,9 +422,9 @@
     "en": "Payment for job posting: {name}"
   },
   "invoice_description": {
-    "ru": "Оплата за размещение вакансии '{name}' на платформе Rabota_ryadom.uz",
-    "uz": "'{name}' vakansiyasini Rabota_ryadom.uz platformasida joylashtirish uchun to'lov",
-    "en": "Payment for posting the job '{name}' on the Rabota_ryadom.uz platform"
+    "ru": "Оплата за размещение вакансии '{name}'",
+    "uz": "'{name}' joylashtirish uchun to'lov",
+    "en": "Payment for posting the job '{name}'"
   },
   "job_posting_fee": {
     "ru": "Плата за публикацию вакансии",
