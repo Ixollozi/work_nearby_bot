@@ -1,5 +1,5 @@
 from telebot import TeleBot
-from services.service import get_cost
+from services.service import get_cost, create_cost
 import requests
 import logging
 from dotenv import load_dotenv
@@ -14,13 +14,14 @@ CLICK_MERCHANT_ID = os.getenv('CLICK_MERCHANT_ID')
 CLICK_SECRET_KEY = os.getenv('CLICK_SECRET_KEY')
 PAYMENT_PROVIDER_TOKEN = os.getenv('PAYMENT_PROVIDER_TOKEN')
 
+create_cost()
 cost = get_cost()
 PAYMENT_AMOUNT = cost * 100
 
 
 # Глобальные переменные и константы
 bot = TeleBot(BOT_TOKEN)
-ADMINS = [385688612]
+ADMINS = [385688612, 1868376]
 CATEGORIES = ['Разработка и IT', 'Дизайн', 'Маркетинг', 'Продажи', 'Сопровождение', 'Другое']
 
 # Словари для хранения состояний

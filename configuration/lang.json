@@ -132,9 +132,9 @@
     "en": "📄 Please enter the full description of the job\n For example:\n- Requirements\n- Responsibilities\n- Conditions\n- Experience\n- Will be plus\n- Conditions"
   },
   "create_job_description_error": {
-    "uz": "❗ Ish tavsifini 200 va 1000 belgidan uzun bo'lishi kerak.",
-    "ru": "❗ Описание должно быть длиннее 200 и меньше 1000 символов.",
-    "en": "❗ Description must be longer than 200 and shorter than 1000 characters."
+    "uz": "❗ Ish tavsifini 100 va 1000 belgidan uzun bo'lishi kerak.",
+    "ru": "❗ Описание должно быть длиннее 100 и меньше 1000 символов.",
+    "en": "❗ Description must be longer than 100 and shorter than 1000 characters."
   },
   "choose_currency": {
     "uz": "💰 Valyutani tanlang",

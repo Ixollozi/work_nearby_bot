@@ -42,7 +42,7 @@ def create_job_description(message, language, name):
         user_state[message.from_user.id] = None
         bot.send_message(message.chat.id, 'MENU:', reply_markup=main_menu(message.from_user.id, language))
 
-    elif len(description) < 200 or len(description) > 1000:
+    elif len(description) < 100 or len(description) > 1000:
         bot.send_message(message.chat.id, lang['create_job_description_error'][language], reply_markup=cancel())
         bot.register_next_step_handler(message, create_job_description, language, name)
     else:
