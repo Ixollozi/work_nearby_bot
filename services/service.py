@@ -69,6 +69,12 @@ def update_user_field(user_id, **kwargs):
             setattr(user, key, value)
         db.commit()
 
+def delete_user_by_id(user_id):
+    user = db.query(User).filter(User.tg_id == user_id).first()
+    if user:
+        db.delete(user)
+        db.commit()
+
 # --- Категории ---
 def get_category_id(category_name):
     category = db.query(Category).filter(Category.name == category_name).first()

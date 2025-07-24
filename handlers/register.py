@@ -26,11 +26,22 @@ def hello(call):
     try:
         language = call.data
         bot.delete_message(user_id, call.message.message_id)
-        bot.send_message(user_id, lang['hello'][language], reply_markup=ReplyKeyboardRemove())
-        bot.register_next_step_handler_by_chat_id(user_id, get_user_name, language)
+        bot.send_message(user_id, lang['policy_of_confident'][language], reply_markup=agree(language))
+        bot.register_next_step_handler_by_chat_id(user_id, get_user_agree, language)
     except Exception as e:
         print(f"[ERROR hello] {e}")
         bot.send_message(user_id, "Произошла ошибка при выборе языка.")
+
+@safe_step
+def get_user_agree(message, language):
+    user_state['message.from_user.id'] = 'awaiting_agree'
+    user_id = message.from_user.id
+    if message.text.lower() == '✅ подтвердить' or message.text.lower() == '✅ agree' or message.text.lower() == '✅ qabul qilish':
+        bot.send_message(user_id, lang['name'][language], reply_markup=ReplyKeyboardRemove())
+        bot.register_next_step_handler(message, get_user_name, language)
+    else:
+        bot.send_message(user_id, lang['policy_of_confident'][language], reply_markup=agree(language))
+        bot.register_next_step_handler(message, get_user_agree, language)
 
 @safe_step
 def get_user_name(message, language):
@@ -109,8 +120,9 @@ def get_user_radius(message, name, role, phone, latitude, longitude, language):
     allowed = ['1000m', '5000m', '10000m', lang['all_vacancies'][language]]
     if text in allowed:
         radius = text
-        user_name = message.from_user.username or ''
-        create_user(user_id, f'@{user_name}', name, f'+{phone}', language, latitude, longitude, role, prefered_radius[radius])
+        raw_username = message.from_user.username
+        user_name = f"@{raw_username}" if raw_username else ""
+        create_user(user_id, user_name, name, f'+{phone}', language, latitude, longitude, role, prefered_radius[radius])
         bot.send_message(user_id, lang['create_user'][language], reply_markup=ReplyKeyboardRemove())
         bot.send_message(user_id, 'MENU: ', reply_markup=main_menu(user_id, language))
     else:

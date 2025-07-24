@@ -1,8 +1,8 @@
 {
-  "hello": {
-    "uz": "Salom! Iltimos, ismingizni yozing 👇",
-    "ru": "Привет! Пожалуйста, введите своё имя 👇",
-    "en": "Hello! Please enter your name 👇"
+  "name": {
+    "uz": "Iltimos, ismingizni yozing 👇",
+    "ru": "Пожалуйста, введите своё имя 👇",
+    "en": "Please enter your name 👇"
   },
   "digit": {
     "uz": "Iltimos, ismingizni faqat harflar bilan yozing ✍️",
@@ -455,5 +455,11 @@
     "ru": "Ошибка при обработке платежа. Пожалуйста, попробуйте снова.",
     "uz": "To'lovni qayta ishlashda xato. Iltimos, qayta urinib ko'ring.",
     "en": "Error processing payment. Please try again."
+  },
+  "policy_of_confident": {
+    "ru": "Политика ответственности и конфиденциальности\n\n1. Мы не несем ответственности за достоверность и содержание объявлений.\n\n2. Вакансии не проверяются вручную, используйте осторожность.\n\n3. Мы не собираем персональные данные.\n\n4. Мошеннические и запрещённые объявления удаляются.\n\n5. Используя бота, вы соглашаетесь с этими условиями.",
+    "uz": "Mas'uliyat va maxfiylik siyosati\n\n1. E'lonlar mazmuni va to'g'riligi uchun javob bermaymiz.\n\n2. Vakansiyalar qo‘lda tekshirilmaydi, ehtiyotkor bo‘ling.\n\n3. Biz shaxsiy ma'lumotlarni to‘plamaymiz.\n\n4. Firibgarlik va taqiqlangan e’lonlar o‘chirib tashlanadi.\n\n5. Botdan foydalangan holda siz shartlarga rozilik bildirasiz.",
+    "en": "Disclaimer and Privacy Policy\n\n1. We do not take responsibility for the accuracy or content of job ads.\n\n2. Jobs are not manually verified — proceed with caution.\n\n3. We do not collect personal data.\n\n4. Fraudulent or illegal posts will be removed.\n\n5. By using this bot, you agree to these terms."
   }
+
 }
