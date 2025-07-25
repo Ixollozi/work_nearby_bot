@@ -1,4 +1,4 @@
-from config import bot
+from configuration.config import bot
 
 def safe_step(handler):
     def wrapper(message, *args, **kwargs):

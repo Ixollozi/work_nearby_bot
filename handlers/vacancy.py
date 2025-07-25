@@ -307,7 +307,7 @@ def agree_job(message, language, name, description, category, payment, contacts,
         bot.send_message(message.chat.id, 'MENU', reply_markup=main_menu(message.from_user.id, language))
         return
 
-    if message.text in ['✅ Подтвердить', '✅ Confirm', '✅ Tasdiqlash']:
+    if message.text in ['✅ Подтвердить', '✅ Confirm', '✅ Qabul qilish']:
         # Сохраняем данные вакансии временно
         user_create_job_data[message.from_user.id] = {
             'language': language,

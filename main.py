@@ -1,6 +1,6 @@
 import logging
 import traceback
-from config import bot
+from configuration.config import bot
 from services.service import initialize_categories, delete_expired_vacancies, delete_expired_responses,delete_user_by_id
 from handlers import admin, find_job, register, vacancy, menu, favorites, settings
 

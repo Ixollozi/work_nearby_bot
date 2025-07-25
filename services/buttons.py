@@ -31,7 +31,7 @@ def get_phone(language):
 def get_role_keyboard(language):
     markup = ReplyKeyboardMarkup(resize_keyboard=True, one_time_keyboard=True)
     if language == 'uz':
-        markup.add(KeyboardButton("👨‍🔧 Аrizachi"), KeyboardButton("🏢 Ish beruvchi"))
+        markup.add(KeyboardButton("👨‍🔧 Ish izlash"), KeyboardButton("🏢 Ish beruvchi"))
     elif language == 'en':
         markup.add(KeyboardButton("👨‍🔧 Seeker"), KeyboardButton("🏢 Employer"))
     else:

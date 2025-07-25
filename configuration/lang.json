@@ -127,7 +127,7 @@
     "en": "❗ Invalid job title. Please try again."
   },
   "create_job_description": {
-    "uz": "📄 Ish tavsifini yozing\n Misol:\n- Sozlamalar\n- Ish joyi\n- Ish joyi\n- Ish joyi\n- Ish joyi\n- Ish joyi\n- Ish joyi",
+    "uz": "📄 Iltimos, to'liq ish tavsifini kiriting\nMasalan:\n- Talablar\n- Mas'uliyat\n- Shartlar\n- Tajriba\n- Plyus bo'ladi\n- Shartlar ",
     "ru": "📄 Пожалуйста, введите  полное описание работы\n Например: \n- Требования\n- Обязанности\n- Условия\n- Опыт\n- Будет плюсом\n- Условия",
     "en": "📄 Please enter the full description of the job\n For example:\n- Requirements\n- Responsibilities\n- Conditions\n- Experience\n- Will be plus\n- Conditions"
   },
