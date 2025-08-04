@@ -6,7 +6,7 @@ from configuration.config import user_state, PAYMENT_AMOUNT, user_payment
 
 
 # ID группы администраторов
-ADMIN_GROUP_ID = -4879632469
+ADMIN_GROUP_ID = -1002843907797
 
 
 @safe_step
